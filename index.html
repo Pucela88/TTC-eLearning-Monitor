@@ -1932,6 +1932,7 @@ async function loadFromFirebase() {
       changed = true;
     }
     setSyncBadge('synced');
+    updateFirebaseStatus('connected');
     if (changed) {
       renderDashboard();
       toast('☁ Data synced from Firebase!');
@@ -1939,6 +1940,7 @@ async function loadFromFirebase() {
   } catch(e) {
     console.warn('Realtime DB load failed:', e);
     setSyncBadge('offline');
+    updateFirebaseStatus('disconnected');
     toast('⚡ Using local data — Firebase offline');
   }
 }
@@ -4680,12 +4682,31 @@ async function saveFirebaseConfig() {
   FB_FIELDS.forEach(f => cfg[f] = document.getElementById('fb_'+f).value.trim());
   if (!cfg.apiKey || !cfg.projectId) { toast('⚠ At least API Key and Project ID are required'); return; }
   localStorage.setItem('ttcFirebaseConfig', JSON.stringify(cfg));
-  toast('✅ Firebase config saved — connecting…');
-  updateFirebaseStatus('saved');
-  // If credentials differ from built-in ones, reinit with new config
-  // Otherwise Firebase is already running
-  setSyncBadge('syncing');
-  await loadFromFirebase();
+  toast('✅ Config saved! Testing connection…');
+  updateFirebaseStatus('testing');
+  // Reinitialize Firebase with the new saved config
+  try {
+    // Delete existing reb-app instance so we can reinit with new config
+    const existing = firebase.apps.find(a => a.name === 'reb-app');
+    if (existing) await existing.delete();
+    const databaseURL = cfg.databaseURL || `https://${cfg.projectId}-default-rtdb.firebaseio.com`;
+    const rebApp = firebase.initializeApp(cfg.databaseURL ? cfg : Object.assign({}, cfg, {databaseURL}), 'reb-app');
+    db = rebApp.database();
+    USE_FIREBASE = true;
+    setSyncBadge('syncing');
+    await loadFromFirebase();
+    updateFirebaseStatus('connected');
+    document.getElementById('fbTestResult').style.display = 'block';
+    document.getElementById('fbTestResult').style.color = 'var(--green)';
+    document.getElementById('fbTestResult').textContent = '✅ Config saved & connected successfully!';
+    toast('🔥 Firebase connected!');
+  } catch(e) {
+    updateFirebaseStatus('disconnected');
+    document.getElementById('fbTestResult').style.display = 'block';
+    document.getElementById('fbTestResult').style.color = 'var(--red)';
+    document.getElementById('fbTestResult').textContent = '❌ Connection failed: ' + e.message;
+    toast('❌ Connection failed — check your credentials');
+  }
 }
 function loadFirebaseFields(show=true) {
   const raw = localStorage.getItem('ttcFirebaseConfig');
