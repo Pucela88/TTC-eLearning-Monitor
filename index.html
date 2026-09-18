@@ -1404,7 +1404,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div class="role-notice">
-      <span class="ni">ℹ️</span>
+      <span class="ni"></span>
       <span><strong>Your Role:</strong> As ICT Teacher, you are <em>not registered</em> on elearning.reb.rw. Each student logs in with their own REB credentials. You run monitoring sessions — asking each student where they have reached, checking their module progress, and verifying whether they have uploaded their assessments per module.</span>
     </div>
     <div class="stat-grid">
@@ -1435,7 +1435,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
   <!-- STUDENTS -->
   <div class="page" id="page-students">
     <div class="role-notice">
-      <span class="ni">📋</span>
+      <span class="ni"></span>
       <span>Record each student's own <strong>REB eLearning credentials</strong> (username) for reference during monitoring sessions. You do not use these to log in — students access elearning.reb.rw themselves.</span>
     </div>
     <div class="filter-row">
@@ -1655,7 +1655,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
   <!-- PROGRESS / SESSION LOG -->
   <div class="page" id="page-progress">
     <div class="role-notice">
-      <span class="ni">📝</span>
+      <span class="ni"></span>
       <span>Each record = one monitoring session. Log the <strong>module the student says they reached</strong>, their reported completion %, and whether they have uploaded the assessment for that module on REB.</span>
     </div>
     <div class="filter-row">
@@ -1816,7 +1816,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">📋 Report Preview</div><span class="text-muted" id="reportMeta"></span></div>
+      <div class="card-header"><div class="card-title">Report Preview</div><span class="text-muted" id="reportMeta"></span></div>
       <div class="report-preview" id="reportPreview">Click "Generate Report Preview" to build your report...</div>
     </div>
   </div>
@@ -1872,7 +1872,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
 
     <!-- ADD WHOLE STREAM PANEL -->
     <div id="as_panel_stream" style="display:none;">
-      <div class="modal-title" style="margin-bottom:12px;">📋 Add a New Whole Stream</div>
+      <div class="modal-title" style="margin-bottom:12px;">Add a New Whole Stream</div>
       <div style="background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.18);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.77rem;color:var(--light);line-height:1.7;">
         Paste or load a full student list. Each line = one student.<br>
         Accepted: &nbsp;<code style="color:var(--accent)">TTC001&nbsp;&nbsp;Full Name</code> &nbsp;or&nbsp; <code style="color:var(--accent)">TTC001,Full Name</code> &nbsp;or just&nbsp; <code style="color:var(--accent)">Full Name</code>
@@ -1949,7 +1949,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
 <!-- LOG SESSION MODAL -->
 <div class="modal-overlay" id="addProgressModal">
   <div class="modal" style="max-width:780px;display:flex;flex-direction:column;">
-    <div class="modal-title">📝 Log Monitoring Session</div>
+    <div class="modal-title">Log Monitoring Session</div>
     <div style="background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.18);border-radius:8px;padding:9px 13px;margin-bottom:16px;font-size:0.77rem;color:var(--light)">
       Record what the student <strong>reported to you</strong>: which module they reached, their % completion, and whether they uploaded the assessment for that module on REB.
     </div>
@@ -2368,7 +2368,22 @@ function detachProgressRealtimeListener() {
 
 // Load all data from Realtime Database into cache, then refresh UI
 async function loadFromFirebase() {
-  if (!USE_FIREBASE || !db) { setSyncBadge('local'); return; }
+  if (!USE_FIREBASE || !db) {
+    setSyncBadge('local');
+    /* Self-heal: this can happen if Firebase was still finishing its
+       connection at the exact moment this ran. Rather than getting stuck
+       on "Local" forever, check again shortly — once initFirebase()
+       actually finishes (it retries automatically on its own), this will
+       pick up the real connection and upgrade the badge correctly. */
+    if (!window._lbLoadRetryScheduled) {
+      window._lbLoadRetryScheduled = true;
+      setTimeout(function() {
+        window._lbLoadRetryScheduled = false;
+        if (USE_FIREBASE && db) loadFromFirebase();
+      }, 3000);
+    }
+    return;
+  }
   try {
     const [studSnap, progSnap] = await Promise.all([
       db.ref('rebData/students').once('value'),
@@ -2404,6 +2419,12 @@ async function loadFromFirebase() {
     }
   }
 }
+// Instant correction: the moment Firebase actually finishes connecting,
+// immediately re-check rather than waiting for the 3-second poll above.
+window.addEventListener('firebaseReady', function() {
+  if (!USE_FIREBASE || !db) return;
+  loadFromFirebase();
+});
 
 // Migrate existing localStorage data up to Realtime Database (first run)
 async function migrateToFirebase() {
@@ -2933,7 +2954,7 @@ function renderDashboard() {
     }
     if (staleBanner) {
       staleBanner.innerHTML =
-        '<span>⚠️ <strong>' + y2Count + ' students on this device are still marked Year 2.</strong> ' +
+        '<span><strong>' + y2Count + ' students on this device are still marked Year 2.</strong> ' +
         'If they were already promoted to Year 3 elsewhere, this device just hasn\'t synced that change yet ' +
         '(usually a Firebase connection or permissions issue) — click below to fix it here too.</span>' +
         '<button onclick="promoteYear2ToYear3()" style="padding:8px 16px;border-radius:8px;border:none;' +
@@ -5055,6 +5076,15 @@ checkSession();
      Instead we register the boot work in the _fbQ queue; _fbTryBoot()
      will drain it once both CDN scripts fire their onload= callbacks. ── */
   async function _doREBBoot() {
+    /* Guard against running more than once — this function can be triggered
+       from three different paths (immediate, the _fbQ queue, and the
+       'firebaseSDKReady' event), and running initFirebase() more than once
+       in quick succession can race with the async app.delete() call inside
+       it, occasionally leaving USE_FIREBASE/db unset for a moment even
+       though Firebase is actually fine — which is exactly what caused the
+       Student Registry to get stuck showing "Local" instead of synced. */
+    if (window._fbBrBooted) return;
+    window._fbBrBooted = true;
     try {
       initFirebase();
       await migrateToFirebase();
@@ -5085,9 +5115,7 @@ checkSession();
     window._fbQ = window._fbQ || [];
     window._fbQ.push(_doREBBoot);
     /* Also listen in case the event fires before we register */
-    window.addEventListener('firebaseSDKReady', function() {
-      if (!window._fbBrBooted) { window._fbBrBooted = true; _doREBBoot(); }
-    }, { once: true });
+    window.addEventListener('firebaseSDKReady', function() { _doREBBoot(); }, { once: true });
     /* Offline fallback: render with local data after 2 s if SDK never loads */
     setTimeout(function() {
       if (!window._fbReady) {
@@ -6777,7 +6805,7 @@ const todayStr=new Date().toISOString().split("T")[0];const totalToday=attendanc
       <div class="page-break">
         <div class="lh"><h1>TTC DE LA SALLE BYUMBA</h1><p>ATTACHMENT — Full Attendance Records Log</p></div>
         <div class="meta"><span><strong>Ref:</strong> ${rpt.refNum} / Attachment A</span><span><strong>Total Records:</strong> ${allRecs.length}</span></div>
-        <div class="att-note">📋 This attachment contains all ${allRecs.length} attendance session record(s) logged in the system, sorted by date. It forms an integral part of Report Ref: ${rpt.refNum}.</div>
+        <div class="att-note">This attachment contains all ${allRecs.length} attendance session record(s) logged in the system, sorted by date. It forms an integral part of Report Ref: ${rpt.refNum}.</div>
         <table>
           <thead><tr>
             <th class="att-th">Date</th>
@@ -8092,7 +8120,7 @@ return React.createElement("div",{className:"app-container"},showPublicRegistrat
       </div>
 
       <!-- ── SECTION: REB Reports ── -->
-      <div class="panel-section-title" style="margin-top:20px">🏫 E-Learning REB Reports</div>
+      <div class="panel-section-title" style="margin-top:20px">E-Learning REB Reports</div>
       <div id="doc-zone-reb" class="doc-zone" data-category="reb" data-accent="#f59e0b" data-accent-rgb="245,158,11">
         <div class="doc-zone-header">
           <span class="doc-zone-label">REB e-learning monitoring reports &amp; documentation</span>
