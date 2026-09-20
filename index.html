@@ -618,8 +618,8 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
     <span class="tb-brand">TTC DE LA SALLE BYUMBA &nbsp;·&nbsp; SMART CLASSROOM PORTAL &nbsp;·&nbsp; GICUMBI, RWANDA</span>
   </div>
   <div class="tb-right">
-    <div class="pill p-t"><div class="blink"></div>REB LIVE</div>
-    <div class="pill p-p"><div class="blink"></div>SYSTEM ONLINE</div>
+    <div class="pill p-t" id="tbRebLive"><div class="blink"></div><span id="tbRebLiveText">REB LIVE</span></div>
+    <div class="pill p-p" id="tbSystemOnline"><div class="blink"></div><span id="tbSystemOnlineText">SYSTEM ONLINE</span></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.22);border-radius:9px;padding:4px 12px;">
       <div id="clock" style="font-family:&#39;IBM Plex Mono&#39;,monospace;font-size:.92rem;font-weight:700;color:#00ffcc;letter-spacing:1.5px;text-shadow:0 0 10px rgba(0,255,180,.5)">07:08:05</div>
       <div id="livedate" style="font-family:&#39;IBM Plex Mono&#39;,monospace;font-size:.65rem;font-weight:600;color:rgba(0,212,170,.85);letter-spacing:.8px">WED, 11 MAR 2026</div>
@@ -1395,7 +1395,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
     </div>
     <div class="flex gap-2 items-center" style="flex-shrink:0;margin-left:auto;padding-right:4px;">
       <div class="sync-badge synced" id="syncBadge"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">☁ Synced</span></div>
-      <button class="btn btn-outline btn-sm" onclick="showModal(&#39;addStudentModal&#39;)">+ Add Student</button>
+      <button class="btn btn-outline btn-sm" onclick="_rebEditingStudentId=null;showModal(&#39;addStudentModal&#39;)">+ Add Student</button>
       <button class="btn btn-primary btn-sm" onclick="showModal(&#39;addProgressModal&#39;)">+ Log Session</button>
       <button class="settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
     </div>
@@ -1404,7 +1404,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div class="role-notice">
-      <span class="ni"></span>
+      <span class="ni">ℹ️</span>
       <span><strong>Your Role:</strong> As ICT Teacher, you are <em>not registered</em> on elearning.reb.rw. Each student logs in with their own REB credentials. You run monitoring sessions — asking each student where they have reached, checking their module progress, and verifying whether they have uploaded their assessments per module.</span>
     </div>
     <div class="stat-grid">
@@ -1435,7 +1435,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
   <!-- STUDENTS -->
   <div class="page" id="page-students">
     <div class="role-notice">
-      <span class="ni"></span>
+      <span class="ni">📋</span>
       <span>Record each student's own <strong>REB eLearning credentials</strong> (username) for reference during monitoring sessions. You do not use these to log in — students access elearning.reb.rw themselves.</span>
     </div>
     <div class="filter-row">
@@ -1455,7 +1455,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
           <option>Y3 LE</option>
         </optgroup>
       </select>
-      <button class="btn btn-primary" onclick="showModal(&#39;addStudentModal&#39;)">+ Add Student</button>
+      <button class="btn btn-primary" onclick="_rebEditingStudentId=null;showModal(&#39;addStudentModal&#39;)">+ Add Student</button>
       <button class="btn btn-sm" onclick="promoteYear2ToYear3()" title="Promote all current Year 2 students to Year 3 for the new academic year" style="background:linear-gradient(135deg,rgba(201,168,76,.35),rgba(245,158,11,.25));border:1.5px solid rgba(245,158,11,.7);color:#fbbf24;font-weight:700;letter-spacing:.3px;box-shadow:0 0 12px rgba(245,158,11,.18);flex-shrink:0;">🎓 Promote Y2 → Y3</button>
       <button class="btn btn-outline btn-sm" onclick="updateAllStudentCredentials()" title="Set username=ID and email=ID@reb.ac.rw for all students that have none" style="border-color:rgba(0,212,170,.4);color:var(--accent);">🔄 Sync All Credentials</button>
       <button class="btn btn-sm" onclick="importAllStreams()" title="Import all Year 3 students across all 4 streams at once" style="background:linear-gradient(135deg,rgba(0,151,167,.35),rgba(0,212,170,.25));border:1.5px solid rgba(0,212,170,.7);color:#00f5c4;font-weight:700;letter-spacing:.3px;box-shadow:0 0 12px rgba(0,212,170,.18);flex-shrink:0;">⬇ Import All Streams (319)</button>
@@ -1597,9 +1597,19 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Stream Filter</label>
             <select id="attRptStream" onchange="renderAttReport()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:.84rem;outline:none">
-              <option value="">All Streams</option>
-              <optgroup label="Year 2"><option>Y2 SSE</option><option>Y2 ECLPE</option><option>Y2 SME</option><option>Y2 LE</option></optgroup>
-              <optgroup label="Year 3"><option>Y3 SSE</option><option>Y3 ECLPE</option><option>Y3 SME</option><option>Y3 LE</option></optgroup>
+              <option value="">All Rooms</option>
+              <optgroup label="Year 2">
+                <option>Y2 SME A</option><option>Y2 SME B</option>
+                <option>Y2 SSE A</option><option>Y2 SSE B</option>
+                <option>Y2 LE A</option><option>Y2 LE B</option>
+                <option>Y2 ECLPE</option>
+              </optgroup>
+              <optgroup label="Year 3">
+                <option>Y3 SME A</option><option>Y3 SME B</option>
+                <option>Y3 SSE A</option><option>Y3 SSE B</option>
+                <option>Y3 LE A</option><option>Y3 LE B</option>
+                <option>Y3 ECLPE</option>
+              </optgroup>
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
@@ -1655,7 +1665,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
   <!-- PROGRESS / SESSION LOG -->
   <div class="page" id="page-progress">
     <div class="role-notice">
-      <span class="ni"></span>
+      <span class="ni">📝</span>
       <span>Each record = one monitoring session. Log the <strong>module the student says they reached</strong>, their reported completion %, and whether they have uploaded the assessment for that module on REB.</span>
     </div>
     <div class="filter-row">
@@ -1816,7 +1826,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">Report Preview</div><span class="text-muted" id="reportMeta"></span></div>
+      <div class="card-header"><div class="card-title">📋 Report Preview</div><span class="text-muted" id="reportMeta"></span></div>
       <div class="report-preview" id="reportPreview">Click "Generate Report Preview" to build your report...</div>
     </div>
   </div>
@@ -1865,14 +1875,14 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
         <div class="form-group"><label>Phone (optional)</label><input type="text" id="s_phone" placeholder="+250 788 000 000"></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
-        <button class="btn btn-outline" onclick="closeModal(&#39;addStudentModal&#39;)">Cancel</button>
+        <button class="btn btn-outline" onclick="_rebEditingStudentId=null;closeModal(&#39;addStudentModal&#39;)">Cancel</button>
         <button class="btn btn-primary" onclick="addStudent()">Save Student</button>
       </div>
     </div>
 
     <!-- ADD WHOLE STREAM PANEL -->
     <div id="as_panel_stream" style="display:none;">
-      <div class="modal-title" style="margin-bottom:12px;">Add a New Whole Stream</div>
+      <div class="modal-title" style="margin-bottom:12px;">📋 Add a New Whole Stream</div>
       <div style="background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.18);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.77rem;color:var(--light);line-height:1.7;">
         Paste or load a full student list. Each line = one student.<br>
         Accepted: &nbsp;<code style="color:var(--accent)">TTC001&nbsp;&nbsp;Full Name</code> &nbsp;or&nbsp; <code style="color:var(--accent)">TTC001,Full Name</code> &nbsp;or just&nbsp; <code style="color:var(--accent)">Full Name</code>
@@ -1937,7 +1947,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
       <div id="ws_skip_notice" style="display:none;margin-top:8px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:7px 12px;font-size:.75rem;color:#fbbf24;"></div>
 
       <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap;">
-        <button class="btn btn-outline" onclick="closeModal(&#39;addStudentModal&#39;)">Cancel</button>
+        <button class="btn btn-outline" onclick="_rebEditingStudentId=null;closeModal(&#39;addStudentModal&#39;)">Cancel</button>
         <button class="btn btn-outline" onclick="wsPreview()" style="border-color:rgba(0,212,170,.5);color:var(--accent);">👁 Preview</button>
         <button class="btn btn-primary" id="ws_save_btn" onclick="wsSave()" style="display:none;">✅ Save Stream</button>
       </div>
@@ -1949,7 +1959,7 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;font-fami
 <!-- LOG SESSION MODAL -->
 <div class="modal-overlay" id="addProgressModal">
   <div class="modal" style="max-width:780px;display:flex;flex-direction:column;">
-    <div class="modal-title">Log Monitoring Session</div>
+    <div class="modal-title">📝 Log Monitoring Session</div>
     <div style="background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.18);border-radius:8px;padding:9px 13px;margin-bottom:16px;font-size:0.77rem;color:var(--light)">
       Record what the student <strong>reported to you</strong>: which module they reached, their % completion, and whether they uploaded the assessment for that module on REB.
     </div>
@@ -2203,6 +2213,38 @@ window.addEventListener('online', function() {
   }
 });
 
+/* ── Permanent connection watchdog ──
+   This is the "keep it configured forever, on every device, with zero
+   manual steps" guarantee. It runs for as long as the page stays open —
+   not just during initial page load — and does two things every 20
+   seconds: (1) if Firebase somehow isn't connected, quietly try again,
+   and (2) update the two top-bar status pills (REB LIVE / SYSTEM ONLINE)
+   so they show the TRUE live connection state on every device, all the
+   time, instead of being fixed decorative text. Nothing here requires
+   the person to ever open Settings or type anything, on any computer. ── */
+function _rebConnectionWatchdog() {
+  const rebPill  = document.getElementById('tbRebLive');
+  const rebText  = document.getElementById('tbRebLiveText');
+  const sysPill  = document.getElementById('tbSystemOnline');
+  const sysText  = document.getElementById('tbSystemOnlineText');
+  const isUp = !!(USE_FIREBASE && db);
+
+  if (rebText) rebText.textContent = isUp ? 'REB LIVE' : 'REB RECONNECTING…';
+  if (sysText) sysText.textContent = isUp ? 'SYSTEM ONLINE' : 'SYSTEM OFFLINE';
+  if (rebPill) rebPill.style.opacity = isUp ? '1' : '0.55';
+  if (sysPill) sysPill.style.opacity = isUp ? '1' : '0.55';
+  if (rebPill) rebPill.title = isUp ? 'Connected to Firebase — data is syncing across all devices' : 'Not connected right now — retrying automatically, no action needed';
+  if (sysPill) sysPill.title = rebPill ? rebPill.title : '';
+
+  if (!isUp && typeof initFirebase === 'function') {
+    initFirebase();
+  }
+}
+setInterval(_rebConnectionWatchdog, 20000);
+// Run once shortly after load too, so the pills reflect reality quickly
+// rather than showing the static default text for the first 20 seconds.
+setTimeout(_rebConnectionWatchdog, 4000);
+
 function initFirebase(overrideCfg) {
   /* ── Guard: SDK must be loaded before this is called ── */
   if (typeof firebase === 'undefined') {
@@ -2253,6 +2295,7 @@ function initFirebase(overrideCfg) {
     window.dispatchEvent(new CustomEvent('firebaseReady'));
     _rebInitRetryCount = 0;
     clearTimeout(_rebInitRetryTimer);
+    if (typeof _rebConnectionWatchdog === 'function') _rebConnectionWatchdog();
     return true;
   } catch(e) {
     console.warn('Firebase init failed, using localStorage:', e);
@@ -2954,7 +2997,7 @@ function renderDashboard() {
     }
     if (staleBanner) {
       staleBanner.innerHTML =
-        '<span><strong>' + y2Count + ' students on this device are still marked Year 2.</strong> ' +
+        '<span>⚠️ <strong>' + y2Count + ' students on this device are still marked Year 2.</strong> ' +
         'If they were already promoted to Year 3 elsewhere, this device just hasn\'t synced that change yet ' +
         '(usually a Firebase connection or permissions issue) — click below to fix it here too.</span>' +
         '<button onclick="promoteYear2ToYear3()" style="padding:8px 16px;border-radius:8px;border:none;' +
@@ -3078,31 +3121,78 @@ function renderStudents() {
   }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px">No students found.</td></tr>';
 }
 
+/* ── Shared refresh after ANY student add/import ──
+   Fixes newly added students not showing up in the Student Class
+   Attendance section: attRefreshStreamDropdown() only rebuilds the
+   dropdown list/counts, it does NOT re-render the actual attendance
+   marking table if a stream is already selected and visible. Without
+   this, an admin who adds a student to a stream they're currently
+   viewing in Attendance wouldn't see that student until they manually
+   re-selected the stream or reloaded the page. ── */
+function _refreshAttendanceAfterStudentChange() {
+  if (typeof attRefreshStreamDropdown === 'function') attRefreshStreamDropdown();
+  const streamEl = document.getElementById('attStreamFilter');
+  if (streamEl && streamEl.value && typeof renderAttMarkTable === 'function') {
+    renderAttMarkTable();
+  }
+  if (typeof renderAttCalendar === 'function') {
+    const calVisible = document.getElementById('attPanelCalendar');
+    if (calVisible && calVisible.style.display !== 'none') renderAttCalendar();
+  }
+}
+
+let _rebEditingStudentId = null;
+
 async function addStudent() {
   const id=document.getElementById('s_id').value.trim();
   const name=document.getElementById('s_name').value.trim();
   if(!id||!name){toast('Please fill in Student ID and Name');return;}
   const students=DB.get('students');
-  if(students.find(s=>s.id===id)){toast('Student ID already exists');return;}
   const sgender=document.getElementById('s_gender')?document.getElementById('s_gender').value:'';
   const susername=document.getElementById('s_username').value.trim()||id;
   const semail=document.getElementById('s_email').value.trim()||(id+'@reb.ac.rw');
-  students.push({id,name,stream:document.getElementById('s_stream').value,gender:sgender,username:susername,email:semail,phone:document.getElementById('s_phone').value.trim()});
+  const sphone=document.getElementById('s_phone').value.trim();
+  const sstream=document.getElementById('s_stream').value;
+
+  if (_rebEditingStudentId) {
+    // ── Editing an existing student ──
+    const idx = students.findIndex(s => s.id === _rebEditingStudentId);
+    if (idx === -1) { toast('That student no longer exists.'); _rebEditingStudentId = null; return; }
+    // Allow the ID itself to be changed, but block colliding with a DIFFERENT existing student
+    if (id !== _rebEditingStudentId && students.find(s => s.id === id)) {
+      toast('Student ID already exists'); return;
+    }
+    students[idx] = { ...students[idx], id, name, stream: sstream, gender: sgender, username: susername, email: semail, phone: sphone };
+    await DB.set('students', students);
+    closeModal('addStudentModal');
+    ['s_id','s_name','s_username','s_email','s_phone'].forEach(i=>document.getElementById(i).value='');
+    _rebEditingStudentId = null;
+    renderStudents();
+    renderDashboard();
+    _refreshAttendanceAfterStudentChange();
+    toast('✅ Student updated!');
+    return;
+  }
+
+  // ── Adding a new student ──
+  if(students.find(s=>s.id===id)){toast('Student ID already exists');return;}
+  students.push({id,name,stream:sstream,gender:sgender,username:susername,email:semail,phone:sphone});
   await DB.set('students',students);
   closeModal('addStudentModal');
   ['s_id','s_name','s_username','s_email','s_phone'].forEach(i=>document.getElementById(i).value='');
   renderStudents();
   renderDashboard();
-  if (typeof attRefreshStreamDropdown === 'function') attRefreshStreamDropdown();
+  _refreshAttendanceAfterStudentChange();
   toast('✅ Student registered!');
 }
 async function deleteStudent(id){
   if(!confirm('Remove this student and all their session records?'))return;
   await DB.set('students',DB.get('students').filter(s=>s.id!==id));
-  renderStudents(); renderDashboard(); toast('Student removed');
+  renderStudents(); renderDashboard(); _refreshAttendanceAfterStudentChange(); toast('Student removed');
 }
 function editStudent(id){
   const s=DB.get('students').find(s=>s.id===id);if(!s)return;
+  _rebEditingStudentId = id;
   document.getElementById('s_id').value=s.id;
   document.getElementById('s_name').value=s.name;
   document.getElementById('s_stream').value=s.stream;
@@ -6703,6 +6793,53 @@ const promoteYear1ToYear2=async()=>{
   );
 };
 const downloadStudentsCSV=stream=>{const list=(stream?attStudents.filter(s=>s.stream===stream):attStudents).slice().sort((a,b)=>(a.lastName||"").localeCompare(b.lastName||"")||(a.firstName||"").localeCompare(b.firstName||""));if(!list.length){alert("No students to export"+(stream?" for "+stream:"")+".");return}let csv="Student ID,First Name,Last Name,Gender,SDMS Code,Stream\n";list.forEach(s=>{csv+=[s.studentId,'"'+s.firstName+'"','"'+s.lastName+'"',s.gender||"",s.sdmsCode||"",s.stream].join(",")+"\n"});const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),download:"Students_"+(stream?stream.replace(/\s+/g,"_"):"All_Streams")+"_"+new Date().toISOString().split("T")[0]+".csv"});document.body.appendChild(a);a.click();document.body.removeChild(a)};
+const _csvParseLine=line=>{const out=[];let cur="",inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ}else if(c===","&&!inQ){out.push(cur);cur=""}else{cur+=c}}out.push(cur);return out.map(s=>s.trim())};
+const triggerImportStudentsCSV=()=>{const inp=document.createElement("input");inp.type="file";inp.accept=".csv,text/csv";inp.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>importStudentsFromCSVText(ev.target.result);reader.readAsText(file)};inp.click()};
+const importStudentsFromCSVText=text=>{
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(lines.length<2){alert("This CSV has no student rows to import.");return}
+  const header=_csvParseLine(lines[0]).map(h=>h.toLowerCase());
+  const idx={studentId:header.findIndex(h=>h.includes("student id")||h==="id"),firstName:header.findIndex(h=>h.includes("first")),lastName:header.findIndex(h=>h.includes("last")),gender:header.findIndex(h=>h.includes("gender")),sdmsCode:header.findIndex(h=>h.includes("sdms")),stream:header.findIndex(h=>h.includes("stream"))};
+  if(idx.studentId===-1||idx.firstName===-1||idx.lastName===-1||idx.stream===-1){alert("\u26A0\uFE0F This CSV doesn't look right \u2014 it needs at least Student ID, First Name, Last Name and Stream columns (matching the format from \"\u2B07\uFE0F CSV\" export).");return}
+  const existingIds=new Set(attStudents.map(s=>s.studentId.trim().toLowerCase()));
+  const toAdd=[],skipped=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=_csvParseLine(lines[i]);
+    const studentId=(cols[idx.studentId]||"").trim();
+    const firstName=(cols[idx.firstName]||"").trim();
+    const lastName=(cols[idx.lastName]||"").trim();
+    const stream=(cols[idx.stream]||"").trim();
+    if(!studentId||!firstName||!lastName||!stream){skipped.push("Row "+(i+1)+": missing required field(s)");continue}
+    if(existingIds.has(studentId.toLowerCase())){skipped.push(studentId+" ("+firstName+" "+lastName+"): already exists here \u2014 skipped");continue}
+    toAdd.push({id:studentId+"-imp-"+Date.now()+"-"+i,studentId,firstName,lastName,gender:idx.gender>-1?(cols[idx.gender]||"").trim():"",sdmsCode:idx.sdmsCode>-1?(cols[idx.sdmsCode]||"").trim():"",stream,registeredAt:new Date().toISOString(),importedFromCSV:true});
+    existingIds.add(studentId.toLowerCase());
+  }
+  if(!toAdd.length){alert("Nothing new to import.\n\n"+(skipped.length?skipped.length+" row(s) were skipped:\n"+skipped.slice(0,10).join("\n")+(skipped.length>10?"\n\u2026and "+(skipped.length-10)+" more":""):""));return}
+  if(!confirm("Import "+toAdd.length+" student(s) into this device, and sync them to the cloud?"+(skipped.length?"\n\n("+skipped.length+" row(s) will be skipped \u2014 duplicates or missing data.)":"")))return;
+  const updated=[...toAdd,...attStudents];
+  setAttStudents(updated);
+  localStorage.setItem("smart-attendance-students",JSON.stringify(updated));
+  const _db=_dbOrNull();
+  let syncedCount=0,failCount=0;
+  (async()=>{
+    for(const s of toAdd){
+      if(_db){
+        try{await _db.ref("attendanceStudents/"+s.id).set(s);syncedCount++}
+        catch(err){failCount++;_queuePendingStudentSync(s)}
+      }else{
+        _queuePendingStudentSync(s);
+      }
+    }
+    saveActivity("Students Imported",toAdd.length+" student(s) imported from CSV \u2014 by "+currentUserRole,"\uD83D\uDCC5");
+    if(!_db){
+      alert("\u2705 "+toAdd.length+" student(s) imported on this device.\n\n\u26A0\uFE0F Not connected to the cloud right now \u2014 they'll sync automatically once this device connects to the internet.");
+    }else if(failCount===0){
+      alert("\u2705 "+toAdd.length+" student(s) imported and confirmed synced to the cloud. They should now appear on any other computer.");
+    }else{
+      alert("\u2705 "+toAdd.length+" student(s) imported.\n\u26A0\uFE0F "+failCount+" didn't sync yet \u2014 they'll retry automatically in the background.");
+    }
+  })();
+};
 const printStudentsReport=stream=>{const list=(stream?attStudents.filter(s=>s.stream===stream):attStudents).slice().sort((a,b)=>(a.lastName||"").localeCompare(b.lastName||"")||(a.firstName||"").localeCompare(b.firstName||""));if(!list.length){alert("No students to print"+(stream?" for "+stream:"")+".");return}const genDate=new Date().toLocaleDateString("en-RW",{year:"numeric",month:"long",day:"numeric"});const rows=list.map((s,i)=>`<tr style="background:${i%2===0?"#fff":"#fafaf7"}"><td style="border:1px solid #ddd;padding:6px 8px;text-align:center">${i+1}</td><td style="border:1px solid #ddd;padding:6px 8px;font-family:monospace">${s.studentId}</td><td style="border:1px solid #ddd;padding:6px 8px">${s.firstName}</td><td style="border:1px solid #ddd;padding:6px 8px;font-weight:600">${s.lastName}</td><td style="border:1px solid #ddd;padding:6px 8px;text-align:center">${s.gender||"\u2014"}</td><td style="border:1px solid #ddd;padding:6px 8px;font-family:monospace">${s.sdmsCode||"\u2014"}</td><td style="border:1px solid #ddd;padding:6px 8px">${s.stream}</td></tr>`).join("");const title=stream?stream+" \u2014 New Incoming Students":"All Streams \u2014 New Incoming Students";const w=window.open("","_blank","width=820,height=1000");w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>
 body{font-family:Georgia,serif;color:#111;padding:32px;font-size:13px;line-height:1.6}
 .hdr{text-align:center;border-bottom:3px double #333;padding-bottom:12px;margin-bottom:16px}
@@ -6732,7 +6869,7 @@ th{background:#f0f0f0;border:1px solid #999;padding:6px 8px;text-align:left;font
 <script>window.onload=function(){window.print()}<\/script>
 </body></html>`);w.document.close()};
 const filteredStudents=attStudents.filter(s=>(!studentStreamFilter||s.stream===studentStreamFilter)&&(!studentSearch||(s.firstName+" "+s.lastName).toLowerCase().includes(studentSearch.toLowerCase())||s.studentId.toLowerCase().includes(studentSearch.toLowerCase())||(s.sdmsCode||"").toLowerCase().includes(studentSearch.toLowerCase()))).sort((a,b)=>(a.lastName||"").localeCompare(b.lastName||"")||(a.firstName||"").localeCompare(b.firstName||""));
-const todayStr=new Date().toISOString().split("T")[0];const totalToday=attendanceRecords.filter(r=>r.date===todayStr).length;const presentToday=attendanceRecords.filter(r=>r.date===todayStr&&r.attended==="yes").length;const absentToday=attendanceRecords.filter(r=>r.date===todayStr&&r.attended==="no").length;const filtered=attendanceRecords.filter(r=>(!filterClass||r.className===filterClass)&&(!filterDate||r.date===filterDate)&&(!filterType||r.sessionType===filterType)&&(showArchived?r.archived:!r.archived));const handleSubmit=e=>{e.preventDefault();if(!form.className||!form.period){alert("Please select a class and period.");return}const absent=form.totalStudents&&form.studentsPresent&&form.studentsAbsent===""?String(Math.max(0,parseInt(form.totalStudents||0)-parseInt(form.studentsPresent||0))):form.studentsAbsent;if(editingId){const updated={...form,studentsAbsent:absent,updatedAt:new Date().toISOString()};updateAttendanceRecord(updated);setEditingId(null)}else{const record={...form,studentsAbsent:absent,id:Date.now().toString(),recordedBy:adminName,recordedAt:new Date().toISOString()};saveAttendanceRecord(record)}setForm({...blankForm,date:form.date});setTab("records")};const startEdit=record=>{setForm({...record});setEditingId(record.id);setTab("new");window.scrollTo({top:0,behavior:"smooth"})};const inp={width:"100%",padding:"9px 13px",background:"var(--background)",border:"1px solid var(--border)",borderRadius:"8px",color:"var(--text)",fontSize:"0.88rem",boxSizing:"border-box"};const lbl={fontSize:"0.75rem",fontWeight:"700",color:"#334155",textTransform:"uppercase",letterSpacing:"0.05em",display:"block",marginBottom:"5px"};const col={display:"flex",flexDirection:"column"};return React.createElement("div",{className:"animate-in",style:{color:"var(--text)"}},React.createElement("div",{className:"header"},React.createElement("h2",{style:{color:"var(--text)"}},"\uD83D\uDCCB Class Attendance System"),React.createElement("p",{style:{color:"#334155"}},"Track e-learning, research sessions and classroom activity \u2014 all 21 classes")),React.createElement("div",{className:"stats-grid",style:{marginBottom:"1.5rem"}},React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--primary)"}},CLASSES.length),React.createElement("div",{className:"stat-label"},"Classes Registered")),React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--success)"}},presentToday),React.createElement("div",{className:"stat-label"},"Present Today")),React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--danger)"}},absentToday),React.createElement("div",{className:"stat-label"},"Absent Today")),React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--warning)"}},attendanceRecords.length),React.createElement("div",{className:"stat-label"},"Total Records"))),React.createElement("div",{style:{display:"flex",gap:"8px",marginBottom:"1.25rem",flexWrap:"wrap"}},[["students",editingStudentId?"\u270F\uFE0F Edit Student":"\uD83C\uDF93 Register Student"],["new",editingId?"\u270F\uFE0F Edit Record":"\u2795 Log Session"],["records","\uD83D\uDCC2 All Records"],["report","\uD83D\uDCCA Class Report"],["officialreport","\uD83D\uDCCB Official Report"]].map(([key,label])=>React.createElement("button",{key,onClick:()=>setTab(key),style:{padding:"9px 20px",borderRadius:"8px",border:"none",cursor:"pointer",fontWeight:"700",fontSize:"0.85rem",transition:"all 0.2s",background:tab===key?key==="officialreport"?"linear-gradient(135deg,#c9a84c,#a07828)":"var(--primary)":"var(--card)",color:tab===key?"#fff":"var(--text-secondary)",border:tab===key?"none":"1px solid var(--border)"}},label))),tab==="students"&&React.createElement("div",null,React.createElement("div",{className:"card",style:{border:editingStudentId?"2px solid var(--warning)":"1px solid var(--border)",marginBottom:"1.25rem"}},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},editingStudentId?"\u270F\uFE0F Edit Student Record":"\uD83C\uDF93 Register New Incoming Student"),editingStudentId&&React.createElement("span",{style:{fontSize:"0.75rem",background:"rgba(245,158,11,0.15)",color:"var(--warning)",padding:"3px 10px",borderRadius:"20px",fontWeight:"700",border:"1px solid rgba(245,158,11,0.3)"}},"\u270F\uFE0F EDIT MODE")),React.createElement("form",{onSubmit:saveStudent},React.createElement("div",{style:{padding:"1.25rem",display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(220px,1fr))",gap:"1rem"}},React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Student ID *"),React.createElement("input",{type:"text",required:true,style:inp,placeholder:"e.g. 451403200033",value:studentForm.studentId,onChange:e=>setStudentForm(p=>({...p,studentId:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"First Name *"),React.createElement("input",{type:"text",required:true,style:inp,placeholder:"e.g. Jean Marie",value:studentForm.firstName,onChange:e=>setStudentForm(p=>({...p,firstName:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Last Name *"),React.createElement("input",{type:"text",required:true,style:inp,placeholder:"e.g. UWIMANA",value:studentForm.lastName,onChange:e=>setStudentForm(p=>({...p,lastName:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Gender *"),React.createElement("select",{required:true,style:inp,value:studentForm.gender,onChange:e=>setStudentForm(p=>({...p,gender:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Gender \u2014"),React.createElement("option",{value:"Male"},"Male"),React.createElement("option",{value:"Female"},"Female"))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"SDMS Code"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. SDMS-2026-0451",value:studentForm.sdmsCode,onChange:e=>setStudentForm(p=>({...p,sdmsCode:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Stream *"),React.createElement("select",{required:true,style:inp,value:studentForm.stream,onChange:e=>setStudentForm(p=>({...p,stream:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Stream \u2014"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c)))),React.createElement("div",{style:{gridColumn:"1 / -1",display:"flex",justifyContent:"flex-end",gap:"10px",paddingTop:"0.75rem",borderTop:"1px solid var(--border)"}},editingStudentId&&React.createElement("button",{type:"button",onClick:()=>{setEditingStudentId(null);setStudentForm(blankStudentForm)},style:{padding:"9px 20px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.08)",color:"#ef4444",cursor:"pointer",fontWeight:"600"}},"\u2715 Cancel Edit"),React.createElement("button",{type:"submit",style:{padding:"9px 24px",borderRadius:"8px",border:"none",background:editingStudentId?"var(--warning)":"var(--primary)",color:editingStudentId?"#000":"#fff",cursor:"pointer",fontWeight:"700",fontSize:"0.9rem"}},editingStudentId?"\uD83D\uDCBE Update Student":"\uD83D\uDCBE Save Student"))))),React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},"\uD83D\uDCCB Registered Students"),React.createElement("div",{style:{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}},React.createElement("span",{style:{fontSize:"0.82rem",color:"#334155"}},filteredStudents.length," student(s)"),React.createElement("button",{onClick:forceSyncStudents,title:"Push every student on this device to the cloud right now, and check whether it actually succeeded",style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(59,130,246,0.12)",color:"#3b82f6",border:"1px solid rgba(59,130,246,0.35)",borderRadius:"8px",cursor:"pointer"}},"\uD83D\uDD04 Sync All to Cloud"),React.createElement("button",{onClick:promoteYear1ToYear2,title:"Promote all current Year 1 students to Year 2, and send the newly-promoted Year 2 students to REB eLearning Monitor",style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"linear-gradient(135deg,rgba(201,168,76,.25),rgba(245,158,11,.18))",color:"#c9a84c",border:"1px solid rgba(245,158,11,.5)",borderRadius:"8px",cursor:"pointer"}},"\uD83C\uDF93 Promote Y1 \u2192 Y2"),React.createElement("button",{onClick:()=>printStudentsReport(studentStreamFilter),title:"Print or save as PDF \u2014 "+(studentStreamFilter||"All Streams"),style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(168,85,247,0.12)",color:"#a855f7",border:"1px solid rgba(168,85,247,0.35)",borderRadius:"8px",cursor:"pointer"}},"\uD83D\uDDA8\uFE0F Print / PDF"),React.createElement("button",{onClick:()=>downloadStudentsCSV(studentStreamFilter),title:"Download CSV \u2014 "+(studentStreamFilter||"All Streams"),style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(16,185,129,0.12)",color:"#10b981",border:"1px solid rgba(16,185,129,0.35)",borderRadius:"8px",cursor:"pointer"}},"\u2B07\uFE0F CSV"))),React.createElement("div",{style:{padding:"1rem",display:"flex",gap:"10px",flexWrap:"wrap",borderBottom:"1px solid var(--border)"}},React.createElement("input",{type:"text",placeholder:"\uD83D\uDD0D Search by name, ID or SDMS code\u2026",style:{...inp,flex:1,minWidth:"200px"},value:studentSearch,onChange:e=>setStudentSearch(e.target.value)}),React.createElement("select",{style:{...inp,width:"auto",minWidth:"160px"},value:studentStreamFilter,onChange:e=>setStudentStreamFilter(e.target.value)},React.createElement("option",{value:""},"All Streams"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c)))),React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{className:"table"},React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",null,"Student ID"),React.createElement("th",null,"First Name"),React.createElement("th",null,"Last Name"),React.createElement("th",null,"Gender"),React.createElement("th",null,"SDMS Code"),React.createElement("th",null,"Stream"),React.createElement("th",null))),React.createElement("tbody",null,filteredStudents.length===0?React.createElement("tr",null,React.createElement("td",{colSpan:"7",style:{textAlign:"center",padding:"3rem",color:"#334155"}},"No students registered yet. Use the form above to add the first one.")):filteredStudents.map(s=>React.createElement("tr",{key:s.id},React.createElement("td",{style:{fontFamily:"monospace",fontSize:"0.82rem"}},s.studentId),React.createElement("td",null,s.firstName),React.createElement("td",null,s.lastName),React.createElement("td",{style:{fontSize:"0.8rem"}},s.gender==="Male"?"\u2642\uFE0F Male":s.gender==="Female"?"\u2640\uFE0F Female":"\u2014"),React.createElement("td",{style:{fontFamily:"monospace",fontSize:"0.8rem",color:"#334155"}},s.sdmsCode||"\u2014"),React.createElement("td",null,React.createElement("span",{style:{background:"rgba(99,102,241,0.12)",color:"#818cf8",padding:"3px 10px",borderRadius:"20px",fontSize:"0.75rem",fontWeight:"700"}},s.stream)),React.createElement("td",null,React.createElement("div",{style:{display:"flex",gap:"4px"}},React.createElement("button",{onClick:()=>startEditStudent(s),title:"Edit",style:{background:"rgba(168,85,247,0.12)",border:"1px solid rgba(168,85,247,0.35)",color:"#c084fc",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\u270F\uFE0F"),React.createElement("button",{onClick:()=>deleteStudent(s.id),title:"Delete",style:{background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",color:"#ef4444",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\uD83D\uDDD1")))))))))),tab==="new"&&React.createElement("div",{className:"card",style:{border:editingId?"2px solid var(--warning)":"1px solid var(--border)"}},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},editingId?"\u270F\uFE0F Edit Session Record":"\u2795 Log Smart Classroom Session"),React.createElement("div",{style:{display:"flex",gap:"10px",alignItems:"center"}},editingId&&React.createElement("span",{style:{fontSize:"0.75rem",background:"rgba(245,158,11,0.15)",color:"var(--warning)",padding:"3px 10px",borderRadius:"20px",fontWeight:"700",border:"1px solid rgba(245,158,11,0.3)"}},"\u270F\uFE0F EDIT MODE"),React.createElement("span",{style:{fontSize:"0.8rem",color:"#334155"}},new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})))),React.createElement("form",{onSubmit:handleSubmit},React.createElement("div",{style:{padding:"1.25rem",display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(260px,1fr))",gap:"1rem"}},React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Class *"),React.createElement("select",{required:true,style:inp,value:form.className,onChange:e=>setForm(p=>({...p,className:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Class \u2014"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Session Type *"),React.createElement("select",{required:true,style:inp,value:form.sessionType,onChange:e=>setForm(p=>({...p,sessionType:e.target.value}))},SESSION_TYPES.map(s=>React.createElement("option",{key:s,value:s},s)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Date *"),React.createElement("input",{type:"date",required:true,style:inp,value:form.date,onChange:e=>setForm(p=>({...p,date:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Period *"),React.createElement("select",{required:true,style:inp,value:form.period,onChange:e=>setForm(p=>({...p,period:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Period \u2014"),PERIODS.map(p=>React.createElement("option",{key:p,value:p},p)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Place / Room"),React.createElement("select",{style:inp,value:form.place,onChange:e=>setForm(p=>({...p,place:e.target.value}))},PLACES.map(pl=>React.createElement("option",{key:pl,value:pl},pl)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Subject / Topic"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. Network Configuration, Web Research...",value:form.subject,onChange:e=>setForm(p=>({...p,subject:e.target.value}))})),form.sessionType!=="Regular Class"&&React.createElement("div",{style:col},React.createElement("label",{style:lbl},"ICT Manager"),React.createElement("input",{type:"text",style:inp,value:form.ictManager,onChange:e=>setForm(p=>({...p,ictManager:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Tutor Name"),React.createElement("input",{type:"text",style:inp,placeholder:"Full name of tutor",value:form.tutorName,onChange:e=>setForm(p=>({...p,tutorName:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Did the Class Attend? *"),React.createElement("select",{required:true,style:inp,value:form.attended,onChange:e=>setForm(p=>({...p,attended:e.target.value}))},React.createElement("option",{value:"yes"},"Yes \u2014 Class Attended"),React.createElement("option",{value:"partial"},"Partial \u2014 Some Students Only"),React.createElement("option",{value:"no"},"No \u2014 Class Did Not Attend"))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Total Students in Class"),React.createElement("input",{type:"number",min:"0",style:inp,placeholder:"e.g. 45",value:form.totalStudents,onChange:e=>setForm(p=>({...p,totalStudents:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Students Present"),React.createElement("input",{type:"number",min:"0",style:inp,placeholder:"Number who attended",value:form.studentsPresent,onChange:e=>setForm(p=>({...p,studentsPresent:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Students Absent"),React.createElement("input",{type:"number",min:"0",style:{...inp,background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.3)"},placeholder:"Auto or enter manually",value:form.totalStudents&&form.studentsPresent?Math.max(0,parseInt(form.totalStudents||0)-parseInt(form.studentsPresent||0)):form.studentsAbsent,onChange:e=>setForm(p=>({...p,studentsAbsent:e.target.value}))})),form.attended!=="yes"&&React.createElement(React.Fragment,null,React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Reason for Absence"),React.createElement("select",{style:inp,value:form.absenceReason,onChange:e=>setForm(p=>({...p,absenceReason:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Reason \u2014"),ABSENCE_REASONS.map(r=>React.createElement("option",{key:r,value:r},r)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Alternative Activity (what class did instead)"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. Regular lesson, Library reading...",value:form.alternativeActivity,onChange:e=>setForm(p=>({...p,alternativeActivity:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Tutor Who Kept the Class"),React.createElement("input",{type:"text",style:inp,placeholder:"Name of supervising tutor",value:form.alternativeTutor,onChange:e=>setForm(p=>({...p,alternativeTutor:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Who Stopped / Cancelled the Session?"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. ICT Manager (power issue)...",value:form.classStoppedBy,onChange:e=>setForm(p=>({...p,classStoppedBy:e.target.value}))}))),React.createElement("div",{style:{...col,gridColumn:"1 / -1"}},React.createElement("label",{style:lbl},"Notes / Actions Taken"),React.createElement("textarea",{rows:3,style:{...inp,resize:"vertical"},placeholder:"Technical issues, follow-up actions, observations...",value:form.notes,onChange:e=>setForm(p=>({...p,notes:e.target.value}))})),React.createElement("div",{style:{gridColumn:"1 / -1",display:"flex",justifyContent:"flex-end",gap:"10px",paddingTop:"0.75rem",borderTop:"1px solid var(--border)"}},editingId?React.createElement("button",{type:"button",onClick:()=>{setEditingId(null);setForm({...blankForm,date:form.date});setTab("records")},style:{padding:"9px 20px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.08)",color:"#ef4444",cursor:"pointer",fontWeight:"600"}},"\u2715 Cancel Edit"):React.createElement("button",{type:"button",onClick:()=>setForm({...blankForm,date:form.date}),style:{padding:"9px 20px",borderRadius:"8px",border:"1px solid var(--border)",background:"transparent",color:"#334155",cursor:"pointer",fontWeight:"600"}},"Clear"),React.createElement("button",{type:"submit",style:{padding:"9px 24px",borderRadius:"8px",border:"none",background:editingId?"var(--warning)":"var(--primary)",color:editingId?"#000":"#fff",cursor:"pointer",fontWeight:"700",fontSize:"0.9rem"}},editingId?"\uD83D\uDCBE Update Record":"\uD83D\uDCBE Save Record"))))),tab==="records"&&React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},"\uD83D\uDCC2 Attendance Records"),React.createElement("div",{style:{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}},React.createElement("button",{onClick:()=>setShowArchived(p=>!p),style:{padding:"5px 12px",borderRadius:"8px",border:"1px solid var(--border)",background:showArchived?"rgba(245,158,11,0.15)":"transparent",color:showArchived?"var(--warning)":"var(--text-secondary)",cursor:"pointer",fontSize:"0.8rem",fontWeight:"600"}},"\uD83D\uDCE6 ",showArchived?"Hide Archived":"Show Archived"),React.createElement("span",{style:{fontSize:"0.82rem",color:"#334155"}},filtered.length," records"))),React.createElement("div",{style:{padding:"1rem",display:"flex",gap:"10px",flexWrap:"wrap",borderBottom:"1px solid var(--border)"}},React.createElement("select",{style:{...inp,width:"auto",minWidth:"150px"},value:filterClass,onChange:e=>setFilterClass(e.target.value)},React.createElement("option",{value:""},"All Classes"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c))),React.createElement("select",{style:{...inp,width:"auto",minWidth:"210px"},value:filterType,onChange:e=>setFilterType(e.target.value)},React.createElement("option",{value:""},"All Session Types"),SESSION_TYPES.map(s=>React.createElement("option",{key:s,value:s},s))),React.createElement("input",{type:"date",style:{...inp,width:"auto"},value:filterDate,onChange:e=>setFilterDate(e.target.value)}),React.createElement("button",{onClick:()=>{setFilterClass("");setFilterDate("");setFilterType("")},style:{padding:"9px 14px",borderRadius:"8px",border:"1px solid var(--border)",background:"transparent",color:"#334155",cursor:"pointer",fontSize:"0.82rem"}},"Clear")),React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{className:"table"},React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",null,"Date"),React.createElement("th",null,"Class"),React.createElement("th",null,"Period"),React.createElement("th",null,"Session"),React.createElement("th",null,"Tutor"),React.createElement("th",null,"ICT Mgr"),React.createElement("th",null,"Subject"),React.createElement("th",null,"Place"),React.createElement("th",null,"Status"),React.createElement("th",null,"Total"),React.createElement("th",null,"Present"),React.createElement("th",null,"Absent"),React.createElement("th",null,"Absence Reason"),React.createElement("th",null,"Alt. Activity"),React.createElement("th",null,"Alt. Tutor"),React.createElement("th",null,"Stopped By"),React.createElement("th",null,"Notes"),React.createElement("th",null,"By"),React.createElement("th",null))),React.createElement("tbody",null,filtered.length===0?React.createElement("tr",null,React.createElement("td",{colSpan:"16",style:{textAlign:"center",padding:"3rem",color:"#334155"}},"No records found. Log a session to get started.")):filtered.map(r=>{const sc=r.attended==="yes"?{bg:"rgba(16,185,129,0.15)",c:"#10b981",l:"Present"}:r.attended==="partial"?{bg:"rgba(234,179,8,0.15)",c:"#eab308",l:"Partial"}:{bg:"rgba(239,68,68,0.15)",c:"#ef4444",l:"Absent"};return React.createElement("tr",{key:r.id},React.createElement("td",{style:{whiteSpace:"nowrap",fontSize:"0.8rem"}},r.date),React.createElement("td",{style:{fontWeight:"700",color:"var(--primary)",whiteSpace:"nowrap"}},r.className),React.createElement("td",{style:{fontSize:"0.78rem",color:"#334155",whiteSpace:"nowrap"}},r.period),React.createElement("td",{style:{fontSize:"0.78rem",whiteSpace:"nowrap"}},r.sessionType),React.createElement("td",{style:{fontSize:"0.82rem"}},r.tutorName||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"var(--primary)"}},r.ictManager||"\u2014"),React.createElement("td",{style:{fontSize:"0.82rem"}},r.subject||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"#334155"}},r.place),React.createElement("td",null,React.createElement("span",{style:{background:sc.bg,color:sc.c,padding:"3px 9px",borderRadius:"20px",fontSize:"0.73rem",fontWeight:"700"}},sc.l)),React.createElement("td",{style:{textAlign:"center",fontWeight:"700",color:"var(--text)"}},r.totalStudents||"\u2014"),React.createElement("td",{style:{textAlign:"center",fontWeight:"700",color:"var(--success)"}},r.studentsPresent||"\u2014"),React.createElement("td",{style:{textAlign:"center",fontWeight:"700",color:"var(--danger)"}},r.studentsAbsent!==void 0&&r.studentsAbsent!==""?r.studentsAbsent:r.totalStudents&&r.studentsPresent?Math.max(0,parseInt(r.totalStudents)-parseInt(r.studentsPresent)):"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"var(--danger)"}},r.absenceReason||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem"}},r.alternativeActivity||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem"}},r.alternativeTutor||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"var(--warning)"}},r.classStoppedBy||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"#334155",maxWidth:"140px",overflow:"hidden",textOverflow:"ellipsis"}},r.notes||"\u2014"),React.createElement("td",{style:{fontSize:"0.72rem",color:"#334155",whiteSpace:"nowrap"}},r.recordedBy),React.createElement("td",null,React.createElement("div",{style:{display:"flex",gap:"4px",alignItems:"center"}},React.createElement("button",{onClick:()=>startEdit(r),title:"Edit record",style:{background:"rgba(168,85,247,0.12)",border:"1px solid rgba(168,85,247,0.35)",color:"#c084fc",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\u270F\uFE0F"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>archiveAttendanceRecord(r.id),title:r.archived?"Unarchive record":"Archive record",style:{background:r.archived?"rgba(245,158,11,0.2)":"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.35)",color:"#f59e0b",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},r.archived?"\uD83D\uDCE4":"\uD83D\uDCE6"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>deleteAttendanceRecord(r.id),title:"Delete record",style:{background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",color:"#ef4444",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\uD83D\uDDD1"))))}))))),tab==="report"&&React.createElement("div",null,React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px,1fr))",gap:"12px",marginBottom:"1.25rem"}},CLASSES.map(cls=>{const recs=attendanceRecords.filter(r=>r.className===cls&&!r.archived);const present=recs.filter(r=>r.attended==="yes").length;const absent=recs.filter(r=>r.attended==="no").length;const partial=recs.filter(r=>r.attended==="partial").length;const total=recs.length;const rate=total>0?Math.round(present/total*100):0;const barC=rate>=80?"var(--success)":rate>=50?"var(--warning)":total>0?"var(--danger)":"var(--border)";return React.createElement("div",{key:cls,style:{background:"var(--card)",border:"1px solid var(--border)",borderRadius:"12px",padding:"1rem",transition:"border-color 0.2s"}},React.createElement("div",{style:{fontWeight:"800",fontSize:"1rem",color:"var(--primary)",marginBottom:"8px",display:"flex",justifyContent:"space-between",alignItems:"center"}},React.createElement("span",null,cls),React.createElement("button",{onClick:()=>{setFilterClass(cls);setTab("records")},style:{fontSize:"0.7rem",padding:"3px 8px",borderRadius:"6px",border:"1px solid var(--border)",background:"transparent",color:"#334155",cursor:"pointer"}},"View All \u2192")),React.createElement("div",{style:{display:"flex",gap:"10px",fontSize:"0.78rem",marginBottom:"8px",flexWrap:"wrap"}},React.createElement("span",{style:{color:"var(--success)"}},"Present: ",present),React.createElement("span",{style:{color:"var(--danger)"}},"Absent: ",absent),partial>0&&React.createElement("span",{style:{color:"var(--warning)"}},"Partial: ",partial)),React.createElement("div",{style:{height:"6px",background:"var(--background)",borderRadius:"3px",overflow:"hidden",marginBottom:"6px"}},React.createElement("div",{style:{width:rate+"%",height:"100%",background:barC,borderRadius:"3px"}})),React.createElement("div",{style:{fontSize:"0.73rem",color:barC,fontWeight:"700",marginBottom:recs.length>0?"10px":"0"}},total>0?rate+"% rate ("+total+" sessions)":"No sessions logged yet"),recs.slice(0,3).map(r=>React.createElement("div",{key:r.id,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px",background:"rgba(168,85,247,0.06)",borderRadius:"6px",marginBottom:"4px",fontSize:"0.73rem"}},React.createElement("div",{style:{color:"#334155",flex:1,minWidth:0}},React.createElement("span",{style:{fontWeight:"700",color:"var(--text)"}},r.date),React.createElement("span",{style:{marginLeft:"6px"}},r.period),r.totalStudents&&React.createElement("span",{style:{marginLeft:"6px",color:"#334155"}},"\uD83D\uDC65 ",r.studentsPresent||"?","/",r.totalStudents)),React.createElement("div",{style:{display:"flex",gap:"3px",flexShrink:0}},React.createElement("button",{onClick:()=>startEdit(r),title:"Edit",style:{background:"rgba(168,85,247,0.15)",border:"1px solid rgba(168,85,247,0.3)",color:"#c084fc",borderRadius:"5px",padding:"2px 6px",cursor:"pointer",fontSize:"0.7rem"}},"\u270F\uFE0F"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>archiveAttendanceRecord(r.id),title:"Archive",style:{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",color:"#f59e0b",borderRadius:"5px",padding:"2px 6px",cursor:"pointer",fontSize:"0.7rem"}},"\uD83D\uDCE6"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>deleteAttendanceRecord(r.id),title:"Delete",style:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",color:"#ef4444",borderRadius:"5px",padding:"2px 6px",cursor:"pointer",fontSize:"0.7rem"}},"\uD83D\uDDD1")))),recs.length>3&&React.createElement("button",{onClick:()=>{setFilterClass(cls);setTab("records")},style:{width:"100%",padding:"4px",borderRadius:"6px",border:"1px dashed var(--border)",background:"transparent",color:"#334155",cursor:"pointer",fontSize:"0.72rem",marginTop:"2px"}},"+",recs.length-3," more records \u2192"))})),React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},"Export Attendance Data")),React.createElement("div",{style:{padding:"1.25rem"}},React.createElement("button",{onClick:()=>{let csv="Date,Class,Period,Session Type,Tutor,ICT Manager,Subject,Place,Attended,Total Students,Students Present,Students Absent,Absence Reason,Alternative Activity,Alternative Tutor,Stopped By,Notes,Logged By\n";attendanceRecords.filter(r=>!r.archived).forEach(r=>{const absent=r.studentsAbsent!==void 0&&r.studentsAbsent!==""?r.studentsAbsent:r.totalStudents&&r.studentsPresent?Math.max(0,parseInt(r.totalStudents)-parseInt(r.studentsPresent)):"";csv+=[r.date,r.className,'"'+r.period+'"','"'+r.sessionType+'"',r.tutorName||"",r.ictManager||"",r.subject||"",r.place,r.attended,r.totalStudents||"",r.studentsPresent||"",absent,r.absenceReason||"",r.alternativeActivity||"",r.alternativeTutor||"",r.classStoppedBy||"",'"'+(r.notes||"")+'"',r.recordedBy].join(",")+"\n"});const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),download:"Attendance_"+new Date().toISOString().split("T")[0]+".csv"});a.click()},style:{padding:"9px 20px",borderRadius:"8px",border:"none",background:"var(--success)",color:"#fff",cursor:"pointer",fontWeight:"700"}},"Download CSV")))),tab==="officialreport"&&(()=>{const periodCode={"Term I":"T1","Term II":"T2","Term III":"T3","Annual":"ANN"};const genRef=(p,y)=>`ATTND/TTC-LSB/${y}/${periodCode[p]||"T1"}/${String(attRptArchive.filter(r=>r.period===p&&r.academicYear===y).length+1).padStart(3,"0")}`;const totalRecs=attendanceRecords.filter(r=>!r.archived).length;const presentRecs=attendanceRecords.filter(r=>!r.archived&&r.attended==="yes").length;const absentRecs=attendanceRecords.filter(r=>!r.archived&&r.attended==="no").length;const partialRecs=attendanceRecords.filter(r=>!r.archived&&r.attended==="partial").length;const sessRate=totalRecs>0?Math.round(presentRecs/totalRecs*100):0;const classStats=CLASSES.map(cls=>{const recs=attendanceRecords.filter(r=>r.className===cls&&!r.archived);const p=recs.filter(r=>r.attended==="yes").length;return{cls,total:recs.length,present:p,rate:recs.length>0?Math.round(p/recs.length*100):0}}).filter(c=>c.total>0);const vBtnSt=v=>({padding:"7px 16px",fontWeight:"700",fontSize:"12px",borderRadius:"8px",cursor:"pointer",border:"none",background:attRptView===v?"linear-gradient(135deg,#c9a84c,#a07828)":"rgba(201,168,76,0.08)",color:attRptView===v?"#fff":"#c9a84c"});const handleGenAtt=()=>{setAttRptGenerated({refNum:genRef(attRptConfig.period,attRptConfig.academicYear),period:attRptConfig.period,academicYear:attRptConfig.academicYear,generatedDate:new Date().toLocaleDateString("en-RW",{year:"numeric",month:"long",day:"numeric"}),totalRecs,presentRecs,absentRecs,partialRecs,sessRate,classStats,totalClasses:CLASSES.length,allRecords:attendanceRecords.filter(r=>!r.archived)});setAttRptView("preview")};const handleArchiveAtt=()=>{if(!attRptGenerated)return;setAttRptArchive(prev=>[{id:Date.now(),refNum:attRptGenerated.refNum,period:attRptGenerated.period,academicYear:attRptGenerated.academicYear,generatedDate:attRptGenerated.generatedDate,submittedDate:new Date().toISOString().split("T")[0],snapshot:attRptGenerated},...prev]);setAttRptGenerated(null);setAttRptView("archive")};const printAttRpt=r=>{const rpt=r||attRptGenerated;if(!rpt)return;const clsRows=rpt.classStats.map(c=>`<tr><td>${c.cls}</td><td style="text-align:center">${c.total}</td><td style="text-align:center;color:#166534">${c.present}</td><td style="text-align:center;color:#b91c1c">${c.total-c.present}</td><td style="text-align:center;font-weight:bold;color:${c.rate>=80?"#166534":c.rate>=50?"#92400e":"#b91c1c"}">${c.rate}%</td></tr>`).join("");const allRecs=(rpt.allRecords||attendanceRecords.filter(rc=>!rc.archived)).sort((a,b)=>a.date>b.date?1:a.date<b.date?-1:0);const recRows=allRecs.map((rc,i)=>{const absent=rc.studentsAbsent!==undefined&&rc.studentsAbsent!==""?rc.studentsAbsent:rc.totalStudents&&rc.studentsPresent?Math.max(0,parseInt(rc.totalStudents||0)-parseInt(rc.studentsPresent||0)):"—";const stColor=rc.attended==="yes"?"#166534":rc.attended==="partial"?"#92400e":"#b91c1c";const stLabel=rc.attended==="yes"?"Present":rc.attended==="partial"?"Partial":"Absent";return`<tr style="background:${i%2===0?"#fff":"#f9f9f9"}"><td style="border:1px solid #ddd;padding:4px 6px;white-space:nowrap">${rc.date}</td><td style="border:1px solid #ddd;padding:4px 6px;font-weight:bold">${rc.className}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.period}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.sessionType.replace("Online E-Learning (ICT Manager)","E-Learn").replace("Online Research (Tutor)","Research")}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.tutorName||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.subject||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.place||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center;font-weight:bold;color:${stColor}">${stLabel}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center">${rc.totalStudents||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center;color:#166534;font-weight:bold">${rc.studentsPresent||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center;color:#b91c1c;font-weight:bold">${absent}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:10px;color:#555">${rc.absenceReason||rc.notes||"—"}</td></tr>`}).join("");const w=window.open("","_blank","width=820,height=1000");w.document.write(`<!DOCTYPE html><html><head><title>${rpt.refNum}</title><style>
+const todayStr=new Date().toISOString().split("T")[0];const totalToday=attendanceRecords.filter(r=>r.date===todayStr).length;const presentToday=attendanceRecords.filter(r=>r.date===todayStr&&r.attended==="yes").length;const absentToday=attendanceRecords.filter(r=>r.date===todayStr&&r.attended==="no").length;const filtered=attendanceRecords.filter(r=>(!filterClass||r.className===filterClass)&&(!filterDate||r.date===filterDate)&&(!filterType||r.sessionType===filterType)&&(showArchived?r.archived:!r.archived));const handleSubmit=e=>{e.preventDefault();if(!form.className||!form.period){alert("Please select a class and period.");return}const absent=form.totalStudents&&form.studentsPresent&&form.studentsAbsent===""?String(Math.max(0,parseInt(form.totalStudents||0)-parseInt(form.studentsPresent||0))):form.studentsAbsent;if(editingId){const updated={...form,studentsAbsent:absent,updatedAt:new Date().toISOString()};updateAttendanceRecord(updated);setEditingId(null)}else{const record={...form,studentsAbsent:absent,id:Date.now().toString(),recordedBy:adminName,recordedAt:new Date().toISOString()};saveAttendanceRecord(record)}setForm({...blankForm,date:form.date});setTab("records")};const startEdit=record=>{setForm({...record});setEditingId(record.id);setTab("new");window.scrollTo({top:0,behavior:"smooth"})};const inp={width:"100%",padding:"9px 13px",background:"var(--background)",border:"1px solid var(--border)",borderRadius:"8px",color:"var(--text)",fontSize:"0.88rem",boxSizing:"border-box"};const lbl={fontSize:"0.75rem",fontWeight:"700",color:"#334155",textTransform:"uppercase",letterSpacing:"0.05em",display:"block",marginBottom:"5px"};const col={display:"flex",flexDirection:"column"};return React.createElement("div",{className:"animate-in",style:{color:"var(--text)"}},React.createElement("div",{className:"header"},React.createElement("h2",{style:{color:"var(--text)"}},"\uD83D\uDCCB Class Attendance System"),React.createElement("p",{style:{color:"#334155"}},"Track e-learning, research sessions and classroom activity \u2014 all 21 classes")),React.createElement("div",{className:"stats-grid",style:{marginBottom:"1.5rem"}},React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--primary)"}},CLASSES.length),React.createElement("div",{className:"stat-label"},"Classes Registered")),React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--success)"}},presentToday),React.createElement("div",{className:"stat-label"},"Present Today")),React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--danger)"}},absentToday),React.createElement("div",{className:"stat-label"},"Absent Today")),React.createElement("div",{className:"stat-card"},React.createElement("div",{className:"stat-value",style:{color:"var(--warning)"}},attendanceRecords.length),React.createElement("div",{className:"stat-label"},"Total Records"))),React.createElement("div",{style:{display:"flex",gap:"8px",marginBottom:"1.25rem",flexWrap:"wrap"}},[["students",editingStudentId?"\u270F\uFE0F Edit Student":"\uD83C\uDF93 Register Student"],["new",editingId?"\u270F\uFE0F Edit Record":"\u2795 Log Session"],["records","\uD83D\uDCC2 All Records"],["report","\uD83D\uDCCA Class Report"],["officialreport","\uD83D\uDCCB Official Report"]].map(([key,label])=>React.createElement("button",{key,onClick:()=>setTab(key),style:{padding:"9px 20px",borderRadius:"8px",border:"none",cursor:"pointer",fontWeight:"700",fontSize:"0.85rem",transition:"all 0.2s",background:tab===key?key==="officialreport"?"linear-gradient(135deg,#c9a84c,#a07828)":"var(--primary)":"var(--card)",color:tab===key?"#fff":"var(--text-secondary)",border:tab===key?"none":"1px solid var(--border)"}},label))),tab==="students"&&React.createElement("div",null,React.createElement("div",{className:"card",style:{border:editingStudentId?"2px solid var(--warning)":"1px solid var(--border)",marginBottom:"1.25rem"}},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},editingStudentId?"\u270F\uFE0F Edit Student Record":"\uD83C\uDF93 Register New Incoming Student"),editingStudentId&&React.createElement("span",{style:{fontSize:"0.75rem",background:"rgba(245,158,11,0.15)",color:"var(--warning)",padding:"3px 10px",borderRadius:"20px",fontWeight:"700",border:"1px solid rgba(245,158,11,0.3)"}},"\u270F\uFE0F EDIT MODE")),React.createElement("form",{onSubmit:saveStudent},React.createElement("div",{style:{padding:"1.25rem",display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(220px,1fr))",gap:"1rem"}},React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Student ID *"),React.createElement("input",{type:"text",required:true,style:inp,placeholder:"e.g. 451403200033",value:studentForm.studentId,onChange:e=>setStudentForm(p=>({...p,studentId:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"First Name *"),React.createElement("input",{type:"text",required:true,style:inp,placeholder:"e.g. Jean Marie",value:studentForm.firstName,onChange:e=>setStudentForm(p=>({...p,firstName:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Last Name *"),React.createElement("input",{type:"text",required:true,style:inp,placeholder:"e.g. UWIMANA",value:studentForm.lastName,onChange:e=>setStudentForm(p=>({...p,lastName:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Gender *"),React.createElement("select",{required:true,style:inp,value:studentForm.gender,onChange:e=>setStudentForm(p=>({...p,gender:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Gender \u2014"),React.createElement("option",{value:"Male"},"Male"),React.createElement("option",{value:"Female"},"Female"))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"SDMS Code"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. SDMS-2026-0451",value:studentForm.sdmsCode,onChange:e=>setStudentForm(p=>({...p,sdmsCode:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Stream *"),React.createElement("select",{required:true,style:inp,value:studentForm.stream,onChange:e=>setStudentForm(p=>({...p,stream:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Stream \u2014"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c)))),React.createElement("div",{style:{gridColumn:"1 / -1",display:"flex",justifyContent:"flex-end",gap:"10px",paddingTop:"0.75rem",borderTop:"1px solid var(--border)"}},editingStudentId&&React.createElement("button",{type:"button",onClick:()=>{setEditingStudentId(null);setStudentForm(blankStudentForm)},style:{padding:"9px 20px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.08)",color:"#ef4444",cursor:"pointer",fontWeight:"600"}},"\u2715 Cancel Edit"),React.createElement("button",{type:"submit",style:{padding:"9px 24px",borderRadius:"8px",border:"none",background:editingStudentId?"var(--warning)":"var(--primary)",color:editingStudentId?"#000":"#fff",cursor:"pointer",fontWeight:"700",fontSize:"0.9rem"}},editingStudentId?"\uD83D\uDCBE Update Student":"\uD83D\uDCBE Save Student"))))),React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},"\uD83D\uDCCB Registered Students"),React.createElement("div",{style:{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}},React.createElement("span",{style:{fontSize:"0.82rem",color:"#334155"}},filteredStudents.length," student(s)"),React.createElement("button",{onClick:forceSyncStudents,title:"Push every student on this device to the cloud right now, and check whether it actually succeeded",style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(59,130,246,0.12)",color:"#3b82f6",border:"1px solid rgba(59,130,246,0.35)",borderRadius:"8px",cursor:"pointer"}},"\uD83D\uDD04 Sync All to Cloud"),React.createElement("button",{onClick:promoteYear1ToYear2,title:"Promote all current Year 1 students to Year 2, and send the newly-promoted Year 2 students to REB eLearning Monitor",style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"linear-gradient(135deg,rgba(201,168,76,.25),rgba(245,158,11,.18))",color:"#c9a84c",border:"1px solid rgba(245,158,11,.5)",borderRadius:"8px",cursor:"pointer"}},"\uD83C\uDF93 Promote Y1 \u2192 Y2"),React.createElement("button",{onClick:()=>printStudentsReport(studentStreamFilter),title:"Print or save as PDF \u2014 "+(studentStreamFilter||"All Streams"),style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(168,85,247,0.12)",color:"#a855f7",border:"1px solid rgba(168,85,247,0.35)",borderRadius:"8px",cursor:"pointer"}},"\uD83D\uDDA8\uFE0F Print / PDF"),React.createElement("button",{onClick:()=>downloadStudentsCSV(studentStreamFilter),title:"Download CSV \u2014 "+(studentStreamFilter||"All Streams"),style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(16,185,129,0.12)",color:"#10b981",border:"1px solid rgba(16,185,129,0.35)",borderRadius:"8px",cursor:"pointer"}},"\u2B07\uFE0F CSV"),React.createElement("button",{onClick:triggerImportStudentsCSV,title:"Import students from a CSV file \u2014 e.g. one exported from another device that isn't syncing",style:{padding:"6px 14px",fontSize:"0.78rem",fontWeight:"700",background:"rgba(234,88,12,0.12)",color:"#ea580c",border:"1px solid rgba(234,88,12,0.35)",borderRadius:"8px",cursor:"pointer"}},"\u2B06\uFE0F Import CSV"))),React.createElement("div",{style:{padding:"1rem",display:"flex",gap:"10px",flexWrap:"wrap",borderBottom:"1px solid var(--border)"}},React.createElement("input",{type:"text",placeholder:"\uD83D\uDD0D Search by name, ID or SDMS code\u2026",style:{...inp,flex:1,minWidth:"200px"},value:studentSearch,onChange:e=>setStudentSearch(e.target.value)}),React.createElement("select",{style:{...inp,width:"auto",minWidth:"160px"},value:studentStreamFilter,onChange:e=>setStudentStreamFilter(e.target.value)},React.createElement("option",{value:""},"All Streams"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c)))),React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{className:"table"},React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",null,"Student ID"),React.createElement("th",null,"First Name"),React.createElement("th",null,"Last Name"),React.createElement("th",null,"Gender"),React.createElement("th",null,"SDMS Code"),React.createElement("th",null,"Stream"),React.createElement("th",null))),React.createElement("tbody",null,filteredStudents.length===0?React.createElement("tr",null,React.createElement("td",{colSpan:"7",style:{textAlign:"center",padding:"3rem",color:"#334155"}},"No students registered yet. Use the form above to add the first one.")):filteredStudents.map(s=>React.createElement("tr",{key:s.id},React.createElement("td",{style:{fontFamily:"monospace",fontSize:"0.82rem"}},s.studentId),React.createElement("td",null,s.firstName),React.createElement("td",null,s.lastName),React.createElement("td",{style:{fontSize:"0.8rem"}},s.gender==="Male"?"\u2642\uFE0F Male":s.gender==="Female"?"\u2640\uFE0F Female":"\u2014"),React.createElement("td",{style:{fontFamily:"monospace",fontSize:"0.8rem",color:"#334155"}},s.sdmsCode||"\u2014"),React.createElement("td",null,React.createElement("span",{style:{background:"rgba(99,102,241,0.12)",color:"#818cf8",padding:"3px 10px",borderRadius:"20px",fontSize:"0.75rem",fontWeight:"700"}},s.stream)),React.createElement("td",null,React.createElement("div",{style:{display:"flex",gap:"4px"}},React.createElement("button",{onClick:()=>startEditStudent(s),title:"Edit",style:{background:"rgba(168,85,247,0.12)",border:"1px solid rgba(168,85,247,0.35)",color:"#c084fc",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\u270F\uFE0F"),React.createElement("button",{onClick:()=>deleteStudent(s.id),title:"Delete",style:{background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",color:"#ef4444",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\uD83D\uDDD1")))))))))),tab==="new"&&React.createElement("div",{className:"card",style:{border:editingId?"2px solid var(--warning)":"1px solid var(--border)"}},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},editingId?"\u270F\uFE0F Edit Session Record":"\u2795 Log Smart Classroom Session"),React.createElement("div",{style:{display:"flex",gap:"10px",alignItems:"center"}},editingId&&React.createElement("span",{style:{fontSize:"0.75rem",background:"rgba(245,158,11,0.15)",color:"var(--warning)",padding:"3px 10px",borderRadius:"20px",fontWeight:"700",border:"1px solid rgba(245,158,11,0.3)"}},"\u270F\uFE0F EDIT MODE"),React.createElement("span",{style:{fontSize:"0.8rem",color:"#334155"}},new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})))),React.createElement("form",{onSubmit:handleSubmit},React.createElement("div",{style:{padding:"1.25rem",display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(260px,1fr))",gap:"1rem"}},React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Class *"),React.createElement("select",{required:true,style:inp,value:form.className,onChange:e=>setForm(p=>({...p,className:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Class \u2014"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Session Type *"),React.createElement("select",{required:true,style:inp,value:form.sessionType,onChange:e=>setForm(p=>({...p,sessionType:e.target.value}))},SESSION_TYPES.map(s=>React.createElement("option",{key:s,value:s},s)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Date *"),React.createElement("input",{type:"date",required:true,style:inp,value:form.date,onChange:e=>setForm(p=>({...p,date:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Period *"),React.createElement("select",{required:true,style:inp,value:form.period,onChange:e=>setForm(p=>({...p,period:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Period \u2014"),PERIODS.map(p=>React.createElement("option",{key:p,value:p},p)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Place / Room"),React.createElement("select",{style:inp,value:form.place,onChange:e=>setForm(p=>({...p,place:e.target.value}))},PLACES.map(pl=>React.createElement("option",{key:pl,value:pl},pl)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Subject / Topic"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. Network Configuration, Web Research...",value:form.subject,onChange:e=>setForm(p=>({...p,subject:e.target.value}))})),form.sessionType!=="Regular Class"&&React.createElement("div",{style:col},React.createElement("label",{style:lbl},"ICT Manager"),React.createElement("input",{type:"text",style:inp,value:form.ictManager,onChange:e=>setForm(p=>({...p,ictManager:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Tutor Name"),React.createElement("input",{type:"text",style:inp,placeholder:"Full name of tutor",value:form.tutorName,onChange:e=>setForm(p=>({...p,tutorName:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Did the Class Attend? *"),React.createElement("select",{required:true,style:inp,value:form.attended,onChange:e=>setForm(p=>({...p,attended:e.target.value}))},React.createElement("option",{value:"yes"},"Yes \u2014 Class Attended"),React.createElement("option",{value:"partial"},"Partial \u2014 Some Students Only"),React.createElement("option",{value:"no"},"No \u2014 Class Did Not Attend"))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Total Students in Class"),React.createElement("input",{type:"number",min:"0",style:inp,placeholder:"e.g. 45",value:form.totalStudents,onChange:e=>setForm(p=>({...p,totalStudents:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Students Present"),React.createElement("input",{type:"number",min:"0",style:inp,placeholder:"Number who attended",value:form.studentsPresent,onChange:e=>setForm(p=>({...p,studentsPresent:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Students Absent"),React.createElement("input",{type:"number",min:"0",style:{...inp,background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.3)"},placeholder:"Auto or enter manually",value:form.totalStudents&&form.studentsPresent?Math.max(0,parseInt(form.totalStudents||0)-parseInt(form.studentsPresent||0)):form.studentsAbsent,onChange:e=>setForm(p=>({...p,studentsAbsent:e.target.value}))})),form.attended!=="yes"&&React.createElement(React.Fragment,null,React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Reason for Absence"),React.createElement("select",{style:inp,value:form.absenceReason,onChange:e=>setForm(p=>({...p,absenceReason:e.target.value}))},React.createElement("option",{value:""},"\u2014 Select Reason \u2014"),ABSENCE_REASONS.map(r=>React.createElement("option",{key:r,value:r},r)))),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Alternative Activity (what class did instead)"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. Regular lesson, Library reading...",value:form.alternativeActivity,onChange:e=>setForm(p=>({...p,alternativeActivity:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Tutor Who Kept the Class"),React.createElement("input",{type:"text",style:inp,placeholder:"Name of supervising tutor",value:form.alternativeTutor,onChange:e=>setForm(p=>({...p,alternativeTutor:e.target.value}))})),React.createElement("div",{style:col},React.createElement("label",{style:lbl},"Who Stopped / Cancelled the Session?"),React.createElement("input",{type:"text",style:inp,placeholder:"e.g. ICT Manager (power issue)...",value:form.classStoppedBy,onChange:e=>setForm(p=>({...p,classStoppedBy:e.target.value}))}))),React.createElement("div",{style:{...col,gridColumn:"1 / -1"}},React.createElement("label",{style:lbl},"Notes / Actions Taken"),React.createElement("textarea",{rows:3,style:{...inp,resize:"vertical"},placeholder:"Technical issues, follow-up actions, observations...",value:form.notes,onChange:e=>setForm(p=>({...p,notes:e.target.value}))})),React.createElement("div",{style:{gridColumn:"1 / -1",display:"flex",justifyContent:"flex-end",gap:"10px",paddingTop:"0.75rem",borderTop:"1px solid var(--border)"}},editingId?React.createElement("button",{type:"button",onClick:()=>{setEditingId(null);setForm({...blankForm,date:form.date});setTab("records")},style:{padding:"9px 20px",borderRadius:"8px",border:"1px solid rgba(239,68,68,0.4)",background:"rgba(239,68,68,0.08)",color:"#ef4444",cursor:"pointer",fontWeight:"600"}},"\u2715 Cancel Edit"):React.createElement("button",{type:"button",onClick:()=>setForm({...blankForm,date:form.date}),style:{padding:"9px 20px",borderRadius:"8px",border:"1px solid var(--border)",background:"transparent",color:"#334155",cursor:"pointer",fontWeight:"600"}},"Clear"),React.createElement("button",{type:"submit",style:{padding:"9px 24px",borderRadius:"8px",border:"none",background:editingId?"var(--warning)":"var(--primary)",color:editingId?"#000":"#fff",cursor:"pointer",fontWeight:"700",fontSize:"0.9rem"}},editingId?"\uD83D\uDCBE Update Record":"\uD83D\uDCBE Save Record"))))),tab==="records"&&React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},"\uD83D\uDCC2 Attendance Records"),React.createElement("div",{style:{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}},React.createElement("button",{onClick:()=>setShowArchived(p=>!p),style:{padding:"5px 12px",borderRadius:"8px",border:"1px solid var(--border)",background:showArchived?"rgba(245,158,11,0.15)":"transparent",color:showArchived?"var(--warning)":"var(--text-secondary)",cursor:"pointer",fontSize:"0.8rem",fontWeight:"600"}},"\uD83D\uDCE6 ",showArchived?"Hide Archived":"Show Archived"),React.createElement("span",{style:{fontSize:"0.82rem",color:"#334155"}},filtered.length," records"))),React.createElement("div",{style:{padding:"1rem",display:"flex",gap:"10px",flexWrap:"wrap",borderBottom:"1px solid var(--border)"}},React.createElement("select",{style:{...inp,width:"auto",minWidth:"150px"},value:filterClass,onChange:e=>setFilterClass(e.target.value)},React.createElement("option",{value:""},"All Classes"),CLASSES.map(c=>React.createElement("option",{key:c,value:c},c))),React.createElement("select",{style:{...inp,width:"auto",minWidth:"210px"},value:filterType,onChange:e=>setFilterType(e.target.value)},React.createElement("option",{value:""},"All Session Types"),SESSION_TYPES.map(s=>React.createElement("option",{key:s,value:s},s))),React.createElement("input",{type:"date",style:{...inp,width:"auto"},value:filterDate,onChange:e=>setFilterDate(e.target.value)}),React.createElement("button",{onClick:()=>{setFilterClass("");setFilterDate("");setFilterType("")},style:{padding:"9px 14px",borderRadius:"8px",border:"1px solid var(--border)",background:"transparent",color:"#334155",cursor:"pointer",fontSize:"0.82rem"}},"Clear")),React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{className:"table"},React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",null,"Date"),React.createElement("th",null,"Class"),React.createElement("th",null,"Period"),React.createElement("th",null,"Session"),React.createElement("th",null,"Tutor"),React.createElement("th",null,"ICT Mgr"),React.createElement("th",null,"Subject"),React.createElement("th",null,"Place"),React.createElement("th",null,"Status"),React.createElement("th",null,"Total"),React.createElement("th",null,"Present"),React.createElement("th",null,"Absent"),React.createElement("th",null,"Absence Reason"),React.createElement("th",null,"Alt. Activity"),React.createElement("th",null,"Alt. Tutor"),React.createElement("th",null,"Stopped By"),React.createElement("th",null,"Notes"),React.createElement("th",null,"By"),React.createElement("th",null))),React.createElement("tbody",null,filtered.length===0?React.createElement("tr",null,React.createElement("td",{colSpan:"16",style:{textAlign:"center",padding:"3rem",color:"#334155"}},"No records found. Log a session to get started.")):filtered.map(r=>{const sc=r.attended==="yes"?{bg:"rgba(16,185,129,0.15)",c:"#10b981",l:"Present"}:r.attended==="partial"?{bg:"rgba(234,179,8,0.15)",c:"#eab308",l:"Partial"}:{bg:"rgba(239,68,68,0.15)",c:"#ef4444",l:"Absent"};return React.createElement("tr",{key:r.id},React.createElement("td",{style:{whiteSpace:"nowrap",fontSize:"0.8rem"}},r.date),React.createElement("td",{style:{fontWeight:"700",color:"var(--primary)",whiteSpace:"nowrap"}},r.className),React.createElement("td",{style:{fontSize:"0.78rem",color:"#334155",whiteSpace:"nowrap"}},r.period),React.createElement("td",{style:{fontSize:"0.78rem",whiteSpace:"nowrap"}},r.sessionType),React.createElement("td",{style:{fontSize:"0.82rem"}},r.tutorName||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"var(--primary)"}},r.ictManager||"\u2014"),React.createElement("td",{style:{fontSize:"0.82rem"}},r.subject||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"#334155"}},r.place),React.createElement("td",null,React.createElement("span",{style:{background:sc.bg,color:sc.c,padding:"3px 9px",borderRadius:"20px",fontSize:"0.73rem",fontWeight:"700"}},sc.l)),React.createElement("td",{style:{textAlign:"center",fontWeight:"700",color:"var(--text)"}},r.totalStudents||"\u2014"),React.createElement("td",{style:{textAlign:"center",fontWeight:"700",color:"var(--success)"}},r.studentsPresent||"\u2014"),React.createElement("td",{style:{textAlign:"center",fontWeight:"700",color:"var(--danger)"}},r.studentsAbsent!==void 0&&r.studentsAbsent!==""?r.studentsAbsent:r.totalStudents&&r.studentsPresent?Math.max(0,parseInt(r.totalStudents)-parseInt(r.studentsPresent)):"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"var(--danger)"}},r.absenceReason||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem"}},r.alternativeActivity||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem"}},r.alternativeTutor||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"var(--warning)"}},r.classStoppedBy||"\u2014"),React.createElement("td",{style:{fontSize:"0.78rem",color:"#334155",maxWidth:"140px",overflow:"hidden",textOverflow:"ellipsis"}},r.notes||"\u2014"),React.createElement("td",{style:{fontSize:"0.72rem",color:"#334155",whiteSpace:"nowrap"}},r.recordedBy),React.createElement("td",null,React.createElement("div",{style:{display:"flex",gap:"4px",alignItems:"center"}},React.createElement("button",{onClick:()=>startEdit(r),title:"Edit record",style:{background:"rgba(168,85,247,0.12)",border:"1px solid rgba(168,85,247,0.35)",color:"#c084fc",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\u270F\uFE0F"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>archiveAttendanceRecord(r.id),title:r.archived?"Unarchive record":"Archive record",style:{background:r.archived?"rgba(245,158,11,0.2)":"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.35)",color:"#f59e0b",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},r.archived?"\uD83D\uDCE4":"\uD83D\uDCE6"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>deleteAttendanceRecord(r.id),title:"Delete record",style:{background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",color:"#ef4444",borderRadius:"6px",padding:"4px 7px",cursor:"pointer",fontSize:"0.75rem",fontWeight:"700"}},"\uD83D\uDDD1"))))}))))),tab==="report"&&React.createElement("div",null,React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px,1fr))",gap:"12px",marginBottom:"1.25rem"}},CLASSES.map(cls=>{const recs=attendanceRecords.filter(r=>r.className===cls&&!r.archived);const present=recs.filter(r=>r.attended==="yes").length;const absent=recs.filter(r=>r.attended==="no").length;const partial=recs.filter(r=>r.attended==="partial").length;const total=recs.length;const rate=total>0?Math.round(present/total*100):0;const barC=rate>=80?"var(--success)":rate>=50?"var(--warning)":total>0?"var(--danger)":"var(--border)";return React.createElement("div",{key:cls,style:{background:"var(--card)",border:"1px solid var(--border)",borderRadius:"12px",padding:"1rem",transition:"border-color 0.2s"}},React.createElement("div",{style:{fontWeight:"800",fontSize:"1rem",color:"var(--primary)",marginBottom:"8px",display:"flex",justifyContent:"space-between",alignItems:"center"}},React.createElement("span",null,cls),React.createElement("button",{onClick:()=>{setFilterClass(cls);setTab("records")},style:{fontSize:"0.7rem",padding:"3px 8px",borderRadius:"6px",border:"1px solid var(--border)",background:"transparent",color:"#334155",cursor:"pointer"}},"View All \u2192")),React.createElement("div",{style:{display:"flex",gap:"10px",fontSize:"0.78rem",marginBottom:"8px",flexWrap:"wrap"}},React.createElement("span",{style:{color:"var(--success)"}},"Present: ",present),React.createElement("span",{style:{color:"var(--danger)"}},"Absent: ",absent),partial>0&&React.createElement("span",{style:{color:"var(--warning)"}},"Partial: ",partial)),React.createElement("div",{style:{height:"6px",background:"var(--background)",borderRadius:"3px",overflow:"hidden",marginBottom:"6px"}},React.createElement("div",{style:{width:rate+"%",height:"100%",background:barC,borderRadius:"3px"}})),React.createElement("div",{style:{fontSize:"0.73rem",color:barC,fontWeight:"700",marginBottom:recs.length>0?"10px":"0"}},total>0?rate+"% rate ("+total+" sessions)":"No sessions logged yet"),recs.slice(0,3).map(r=>React.createElement("div",{key:r.id,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px",background:"rgba(168,85,247,0.06)",borderRadius:"6px",marginBottom:"4px",fontSize:"0.73rem"}},React.createElement("div",{style:{color:"#334155",flex:1,minWidth:0}},React.createElement("span",{style:{fontWeight:"700",color:"var(--text)"}},r.date),React.createElement("span",{style:{marginLeft:"6px"}},r.period),r.totalStudents&&React.createElement("span",{style:{marginLeft:"6px",color:"#334155"}},"\uD83D\uDC65 ",r.studentsPresent||"?","/",r.totalStudents)),React.createElement("div",{style:{display:"flex",gap:"3px",flexShrink:0}},React.createElement("button",{onClick:()=>startEdit(r),title:"Edit",style:{background:"rgba(168,85,247,0.15)",border:"1px solid rgba(168,85,247,0.3)",color:"#c084fc",borderRadius:"5px",padding:"2px 6px",cursor:"pointer",fontSize:"0.7rem"}},"\u270F\uFE0F"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>archiveAttendanceRecord(r.id),title:"Archive",style:{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",color:"#f59e0b",borderRadius:"5px",padding:"2px 6px",cursor:"pointer",fontSize:"0.7rem"}},"\uD83D\uDCE6"),currentUserRole==="Admin"&&React.createElement("button",{onClick:()=>deleteAttendanceRecord(r.id),title:"Delete",style:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",color:"#ef4444",borderRadius:"5px",padding:"2px 6px",cursor:"pointer",fontSize:"0.7rem"}},"\uD83D\uDDD1")))),recs.length>3&&React.createElement("button",{onClick:()=>{setFilterClass(cls);setTab("records")},style:{width:"100%",padding:"4px",borderRadius:"6px",border:"1px dashed var(--border)",background:"transparent",color:"#334155",cursor:"pointer",fontSize:"0.72rem",marginTop:"2px"}},"+",recs.length-3," more records \u2192"))})),React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("h3",{className:"card-title",style:{color:"var(--text)"}},"Export Attendance Data")),React.createElement("div",{style:{padding:"1.25rem"}},React.createElement("button",{onClick:()=>{let csv="Date,Class,Period,Session Type,Tutor,ICT Manager,Subject,Place,Attended,Total Students,Students Present,Students Absent,Absence Reason,Alternative Activity,Alternative Tutor,Stopped By,Notes,Logged By\n";attendanceRecords.filter(r=>!r.archived).forEach(r=>{const absent=r.studentsAbsent!==void 0&&r.studentsAbsent!==""?r.studentsAbsent:r.totalStudents&&r.studentsPresent?Math.max(0,parseInt(r.totalStudents)-parseInt(r.studentsPresent)):"";csv+=[r.date,r.className,'"'+r.period+'"','"'+r.sessionType+'"',r.tutorName||"",r.ictManager||"",r.subject||"",r.place,r.attended,r.totalStudents||"",r.studentsPresent||"",absent,r.absenceReason||"",r.alternativeActivity||"",r.alternativeTutor||"",r.classStoppedBy||"",'"'+(r.notes||"")+'"',r.recordedBy].join(",")+"\n"});const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),download:"Attendance_"+new Date().toISOString().split("T")[0]+".csv"});a.click()},style:{padding:"9px 20px",borderRadius:"8px",border:"none",background:"var(--success)",color:"#fff",cursor:"pointer",fontWeight:"700"}},"Download CSV")))),tab==="officialreport"&&(()=>{const periodCode={"Term I":"T1","Term II":"T2","Term III":"T3","Annual":"ANN"};const genRef=(p,y)=>`ATTND/TTC-LSB/${y}/${periodCode[p]||"T1"}/${String(attRptArchive.filter(r=>r.period===p&&r.academicYear===y).length+1).padStart(3,"0")}`;const totalRecs=attendanceRecords.filter(r=>!r.archived).length;const presentRecs=attendanceRecords.filter(r=>!r.archived&&r.attended==="yes").length;const absentRecs=attendanceRecords.filter(r=>!r.archived&&r.attended==="no").length;const partialRecs=attendanceRecords.filter(r=>!r.archived&&r.attended==="partial").length;const sessRate=totalRecs>0?Math.round(presentRecs/totalRecs*100):0;const classStats=CLASSES.map(cls=>{const recs=attendanceRecords.filter(r=>r.className===cls&&!r.archived);const p=recs.filter(r=>r.attended==="yes").length;return{cls,total:recs.length,present:p,rate:recs.length>0?Math.round(p/recs.length*100):0}}).filter(c=>c.total>0);const vBtnSt=v=>({padding:"7px 16px",fontWeight:"700",fontSize:"12px",borderRadius:"8px",cursor:"pointer",border:"none",background:attRptView===v?"linear-gradient(135deg,#c9a84c,#a07828)":"rgba(201,168,76,0.08)",color:attRptView===v?"#fff":"#c9a84c"});const handleGenAtt=()=>{setAttRptGenerated({refNum:genRef(attRptConfig.period,attRptConfig.academicYear),period:attRptConfig.period,academicYear:attRptConfig.academicYear,generatedDate:new Date().toLocaleDateString("en-RW",{year:"numeric",month:"long",day:"numeric"}),totalRecs,presentRecs,absentRecs,partialRecs,sessRate,classStats,totalClasses:CLASSES.length,allRecords:attendanceRecords.filter(r=>!r.archived)});setAttRptView("preview")};const handleArchiveAtt=()=>{if(!attRptGenerated)return;setAttRptArchive(prev=>[{id:Date.now(),refNum:attRptGenerated.refNum,period:attRptGenerated.period,academicYear:attRptGenerated.academicYear,generatedDate:attRptGenerated.generatedDate,submittedDate:new Date().toISOString().split("T")[0],snapshot:attRptGenerated},...prev]);setAttRptGenerated(null);setAttRptView("archive")};const printAttRpt=r=>{const rpt=r||attRptGenerated;if(!rpt)return;const clsRows=rpt.classStats.map(c=>`<tr><td>${c.cls}</td><td style="text-align:center">${c.total}</td><td style="text-align:center;color:#166534">${c.present}</td><td style="text-align:center;color:#b91c1c">${c.total-c.present}</td><td style="text-align:center;font-weight:bold;color:${c.rate>=80?"#166534":c.rate>=50?"#92400e":"#b91c1c"}">${c.rate}%</td></tr>`).join("");const allRecs=(rpt.allRecords||attendanceRecords.filter(rc=>!rc.archived)).sort((a,b)=>a.date>b.date?1:a.date<b.date?-1:0);const recRows=allRecs.map((rc,i)=>{const absent=rc.studentsAbsent!==undefined&&rc.studentsAbsent!==""?rc.studentsAbsent:rc.totalStudents&&rc.studentsPresent?Math.max(0,parseInt(rc.totalStudents||0)-parseInt(rc.studentsPresent||0)):"—";const stColor=rc.attended==="yes"?"#166534":rc.attended==="partial"?"#92400e":"#b91c1c";const stLabel=rc.attended==="yes"?"Present":rc.attended==="partial"?"Partial":"Absent";return`<tr style="background:${i%2===0?"#fff":"#f9f9f9"}"><td style="border:1px solid #ddd;padding:4px 6px;white-space:nowrap">${rc.date}</td><td style="border:1px solid #ddd;padding:4px 6px;font-weight:bold">${rc.className}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.period}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.sessionType.replace("Online E-Learning (ICT Manager)","E-Learn").replace("Online Research (Tutor)","Research")}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.tutorName||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.subject||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:11px">${rc.place||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center;font-weight:bold;color:${stColor}">${stLabel}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center">${rc.totalStudents||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center;color:#166534;font-weight:bold">${rc.studentsPresent||"—"}</td><td style="border:1px solid #ddd;padding:4px 6px;text-align:center;color:#b91c1c;font-weight:bold">${absent}</td><td style="border:1px solid #ddd;padding:4px 6px;font-size:10px;color:#555">${rc.absenceReason||rc.notes||"—"}</td></tr>`}).join("");const w=window.open("","_blank","width=820,height=1000");w.document.write(`<!DOCTYPE html><html><head><title>${rpt.refNum}</title><style>
 
         /* ===== SCHOOL WATERMARK ===== */
         .school-watermark {
@@ -6805,7 +6942,7 @@ const todayStr=new Date().toISOString().split("T")[0];const totalToday=attendanc
       <div class="page-break">
         <div class="lh"><h1>TTC DE LA SALLE BYUMBA</h1><p>ATTACHMENT — Full Attendance Records Log</p></div>
         <div class="meta"><span><strong>Ref:</strong> ${rpt.refNum} / Attachment A</span><span><strong>Total Records:</strong> ${allRecs.length}</span></div>
-        <div class="att-note">This attachment contains all ${allRecs.length} attendance session record(s) logged in the system, sorted by date. It forms an integral part of Report Ref: ${rpt.refNum}.</div>
+        <div class="att-note">📋 This attachment contains all ${allRecs.length} attendance session record(s) logged in the system, sorted by date. It forms an integral part of Report Ref: ${rpt.refNum}.</div>
         <table>
           <thead><tr>
             <th class="att-th">Date</th>
@@ -7721,7 +7858,7 @@ return React.createElement("div",{className:"app-container"},showPublicRegistrat
 
 <!-- ══════ IMAGES GALLERY PANEL ══════ -->
 <div class="panel-overlay" id="panel-images" onclick="closePanelOutside(event,'images')">
-  <div class="panel-box" style="max-width:900px">
+  <div class="panel-box" style="max-width:calc(100vw - 24px);width:calc(100vw - 24px);max-height:calc(100vh - 24px);height:calc(100vh - 24px)">
     <div class="panel-top-bar" style="background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div>
     <div class="panel-head">
       <div class="panel-head-ic" style="background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.3)">🖼️</div>
@@ -7839,7 +7976,7 @@ return React.createElement("div",{className:"app-container"},showPublicRegistrat
 
 <!-- ══════ VIDEOS PANEL ══════ -->
 <div class="panel-overlay" id="panel-videos" onclick="closePanelOutside(event,'videos')">
-  <div class="panel-box" style="max-width:900px">
+  <div class="panel-box" style="max-width:calc(100vw - 24px);width:calc(100vw - 24px);max-height:calc(100vh - 24px);height:calc(100vh - 24px)">
     <div class="panel-top-bar" style="background:linear-gradient(90deg,#dc2626,#ef4444)"></div>
 
     <!-- Header — mirrors gallery panel format -->
@@ -8044,6 +8181,17 @@ return React.createElement("div",{className:"app-container"},showPublicRegistrat
         </svg>
         Upload Video
       </button>
+      <button id="upload-video-save-btn" onclick="saveUploadedVideo()" disabled
+        style="display:none;padding:9px 22px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#a855f7);
+               border:none;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.82rem;font-weight:700;
+               cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,.35);display:flex;align-items:center;gap:6px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg>
+        💾 Save Video
+      </button>
     </div>
   </div>
 </div>
@@ -8120,7 +8268,7 @@ return React.createElement("div",{className:"app-container"},showPublicRegistrat
       </div>
 
       <!-- ── SECTION: REB Reports ── -->
-      <div class="panel-section-title" style="margin-top:20px">E-Learning REB Reports</div>
+      <div class="panel-section-title" style="margin-top:20px">🏫 E-Learning REB Reports</div>
       <div id="doc-zone-reb" class="doc-zone" data-category="reb" data-accent="#f59e0b" data-accent-rgb="245,158,11">
         <div class="doc-zone-header">
           <span class="doc-zone-label">REB e-learning monitoring reports &amp; documentation</span>
@@ -9271,7 +9419,7 @@ function _photoUpdateCount() {
   if (counter) counter.textContent = '1 / ' + total;
 }
 function _photoRebuildLightbox() {
-  if (!window._lbImgs) return;
+  if (typeof _lbImgs === 'undefined') return;
   _lbImgs.splice(0, _lbImgs.length);
   var items = document.querySelectorAll('#panel-images .gallery-item');
   items.forEach(function(el, i) {
@@ -9286,8 +9434,8 @@ function _photoRebuildLightbox() {
 }
 // ─── Download currently viewed photo ───
 function downloadCurrentPhoto() {
-  var src = (window._lbImgs && window._lbImgs[_lbIdx]) ? window._lbImgs[_lbIdx].src : '';
-  var cap = (window._lbImgs && window._lbImgs[_lbIdx]) ? window._lbImgs[_lbIdx].cap : '';
+  var src = (typeof _lbImgs !== 'undefined' && _lbImgs[_lbIdx]) ? _lbImgs[_lbIdx].src : '';
+  var cap = (typeof _lbImgs !== 'undefined' && _lbImgs[_lbIdx]) ? _lbImgs[_lbIdx].cap : '';
   if (!src) {
     var img = document.querySelector('#panel-images .gallery-item img');
     if (!img) { alert('Open a photo in the lightbox first, then click Download.'); return; }
@@ -9637,15 +9785,20 @@ function openUploadVideoModal() {
   if (!modal) return;
   _pickedVideoFile = null;
   _pickedVideoMeta = null;
+  window._pendingVideoMeta = null;
   document.getElementById('upload-video-file').value = '';
   document.getElementById('upload-video-title').value = '';
   document.getElementById('upload-video-meta').style.display = 'none';
   document.getElementById('upload-video-progress-wrap').style.display = 'none';
-  document.getElementById('upload-video-progress-bar').style.width = '0%';
+  var progBar = document.getElementById('upload-video-progress-bar');
+  progBar.style.width = '0%';
+  progBar.style.background = 'linear-gradient(90deg,#16a34a,#22c55e)';
   var err = document.getElementById('upload-video-modal-err');
   if (err) err.style.display = 'none';
   var btn = document.getElementById('upload-video-submit-btn');
-  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.display = 'flex'; }
+  var saveBtn = document.getElementById('upload-video-save-btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '.6'; saveBtn.style.display = 'none'; }
   modal.style.display = 'flex';
 }
 function closeUploadVideoModal() {
@@ -9724,6 +9877,7 @@ function submitVideoUpload() {
   var storagePath = 'videos/' + key + '.' + ext;
 
   var btn = document.getElementById('upload-video-submit-btn');
+  var saveBtn = document.getElementById('upload-video-save-btn');
   var progWrap = document.getElementById('upload-video-progress-wrap');
   var progBar  = document.getElementById('upload-video-progress-bar');
   var progText = document.getElementById('upload-video-progress-text');
@@ -9753,7 +9907,7 @@ function submitVideoUpload() {
     _lastBytes = snap.bytesTransferred;
     var pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
     progBar.style.width = pct + '%';
-    progText.textContent = 'Uploading… ' + pct + '%';
+    progText.textContent = pct < 100 ? ('Uploading… ' + pct + '%') : 'Finishing up…';
   }, function(uploadErr) {
     clearInterval(_stallTimer);
     console.warn('Video upload failed:', uploadErr);
@@ -9762,8 +9916,16 @@ function submitVideoUpload() {
     progWrap.style.display = 'none';
   }, function() {
     clearInterval(_stallTimer);
+    /* ── The upload itself has reached 100% here, but we deliberately do
+       NOT save the video yet. Instead, fetch its share link and hand
+       control to a separate "💾 Save Video" button — so nothing is added
+       to the gallery until the person has confirmed the upload is fully
+       complete and explicitly chosen to save it. ── */
+    progBar.style.width = '100%';
+    progText.textContent = '✅ Upload complete (100%) — click "Save Video" below to finish';
+    progBar.style.background = 'linear-gradient(90deg,#7c3aed,#a855f7)';
     task.snapshot.ref.getDownloadURL().then(function(downloadUrl) {
-      var meta = {
+      window._pendingVideoMeta = {
         key: key,
         type: 'upload',
         title: titleVal,
@@ -9773,22 +9935,34 @@ function submitVideoUpload() {
         size: (_pickedVideoMeta && _pickedVideoMeta.size) || _pickedVideoFile.size,
         added: Date.now()
       };
-      _vidPushMetaToFB(key, meta);
-      var grid  = document.getElementById('vid-grid');
-      var empty = document.getElementById('vid-empty');
-      if (grid) {
-        if (empty) empty.style.display = 'none';
-        var card = _buildVideoCard(meta);
-        grid.prepend(card);
-        _vidUpdateCount();
-      }
-      btn.disabled = false; btn.style.opacity = '1';
-      closeUploadVideoModal();
+      btn.style.display = 'none';
+      saveBtn.style.display = 'flex';
+      saveBtn.disabled = false;
+      saveBtn.style.opacity = '1';
     }).catch(function(urlErr) {
       _showUploadErr('⚠️ Uploaded, but could not get a share link: ' + urlErr.message);
       btn.disabled = false; btn.style.opacity = '1';
     });
   });
+}
+
+function saveUploadedVideo() {
+  const meta = window._pendingVideoMeta;
+  if (!meta) { _showUploadErr('⚠️ Nothing to save yet — the upload hasn\'t finished.'); return; }
+  const saveBtn = document.getElementById('upload-video-save-btn');
+  saveBtn.disabled = true; saveBtn.style.opacity = '.6';
+
+  _vidPushMetaToFB(meta.key, meta);
+  const grid  = document.getElementById('vid-grid');
+  const empty = document.getElementById('vid-empty');
+  if (grid) {
+    if (empty) empty.style.display = 'none';
+    const card = _buildVideoCard(meta);
+    grid.prepend(card);
+    _vidUpdateCount();
+  }
+  window._pendingVideoMeta = null;
+  closeUploadVideoModal();
 }
 function _vidDeleteUpload(key, storagePath) {
   if (!confirm('Delete this video? This cannot be undone.')) return;
@@ -10233,6 +10407,7 @@ function nsConfirmImport() {
   DB.set('students', [...existing, ...toAdd]);
   renderStudents();
   updateStats();
+  _refreshAttendanceAfterStudentChange();
 
   const skipped = _nsParsed.filter(s => s._dup).length;
   closeModal('importStreamModal');
@@ -10401,6 +10576,7 @@ function wsSave() {
   DB.set('students', existing.concat(toAdd));
   renderStudents();
   updateStats();
+  _refreshAttendanceAfterStudentChange();
   closeModal('addStudentModal');
   // reset stream panel
   document.getElementById('ws_list').value = '';
@@ -10691,7 +10867,21 @@ function renderAttMarkTable() {
       <td style="font-weight:700;min-width:180px;color:#C9A84C">${name}</td>
       <td style="font-size:.75rem;color:#C9A84C">${gender}</td>
       <td style="min-width:140px">
-        <select id="room_${code}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:7px;font-size:.76rem;outline:none;width:100%">
+        ${(() => {
+          // Auto-derive the room straight from the student's own registered
+          // stream (e.g. "Y3 SME A") instead of asking for a manual pick
+          // every time — this is exactly what caused accidental wrong-room
+          // selections before. Falls back to a manual dropdown only for the
+          // rare student whose stream has no room letter recorded at all.
+          const studentStream = (s.stream || '').trim();
+          const autoRoom = /\s[AB]$/.test(studentStream) ? studentStream : '';
+          if (autoRoom) {
+            return `<span id="room_${code}_display" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.3);color:var(--accent);padding:4px 10px;border-radius:7px;font-size:.76rem;font-weight:700">
+              🏫 ${autoRoom}
+            </span>
+            <input type="hidden" id="room_${code}" value="${autoRoom}">`;
+          }
+          return `<select id="room_${code}" style="background:var(--surface);border:1.5px solid #f59e0b;color:var(--text);padding:4px 8px;border-radius:7px;font-size:.76rem;outline:none;width:100%" title="This student's registered stream has no room (A/B) recorded — pick manually or fix their stream in Student Registry">
           <option value="">— Select —</option>
           <optgroup label="── Year 2 ──">
             <option ${room==='Y2 SME A'?'selected':''}>Y2 SME A</option>
@@ -10711,7 +10901,8 @@ function renderAttMarkTable() {
             <option ${room==='Y3 LE B'?'selected':''}>Y3 LE B</option>
             <option ${room==='Y3 ECLPE'?'selected':''}>Y3 ECLPE</option>
           </optgroup>
-        </select>
+        </select>`;
+        })()}
       </td>
       <td style="text-align:center;width:90px">
         <input type="radio" name="att_${code}" id="p_${code}" value="present" ${isP?'checked':''} onchange="attRowChange('${code}','present')">
@@ -11031,14 +11222,21 @@ function attPctBadge(pct){
 function renderAttReport(){
   purgeRemovedStreams();
   const period  =(document.getElementById('attRptPeriod')||{}).value||'daily';
-  const stream  =(document.getElementById('attRptStream')||{}).value||'';
+  const roomFilter=(document.getElementById('attRptStream')||{}).value||'';
   const refDate =(document.getElementById('attRptDate')||{}).value||new Date().toISOString().slice(0,10);
   const term    =(document.getElementById('attRptTerm')||{}).value||'1';
   const {start,end}=getDateRange(period,refDate,term);
 
+  // Note: a saved attendance session's own r.stream is the broader CLASS
+  // selected while marking (e.g. "Y3 SME"), but each individual student's
+  // mark carries their own specific room (e.g. "Y3 SME A" or "Y3 SME B").
+  // So filtering by room has to happen per-student-mark, not per-session —
+  // one marked session can contain students from both Room A and Room B.
+  const matchesRoom = m => !roomFilter || m.room === roomFilter || m.stream === roomFilter;
+
   const allRecs=getAttRecords().filter(r=>{
     if(r.date<start||r.date>end)return false;
-    if(stream&&r.stream!==stream)return false;
+    if(roomFilter && !Object.values(r.marks||{}).some(matchesRoom)) return false;
     return true;
   });
 
@@ -11046,9 +11244,12 @@ function renderAttReport(){
   let totalP=0,totalA=0,totalMks=0;
   const studentMeta={};
   allRecs.forEach(r=>{
-    totalP+=r.presentCount; totalA+=r.absentCount; totalMks+=r.totalCount;
     Object.entries(r.marks||{}).forEach(([code,m])=>{
-      if(!studentMeta[code]) studentMeta[code]={name:m.name,stream:m.stream,present:0,absent:0,total:0};
+      if(!matchesRoom(m)) return;
+      totalMks++;
+      if(m.status==='present') totalP++;
+      if(m.status==='absent')  totalA++;
+      if(!studentMeta[code]) studentMeta[code]={name:m.name,stream:m.room||m.stream,present:0,absent:0,total:0};
       studentMeta[code].total++;
       if(m.status==='present') studentMeta[code].present++;
       if(m.status==='absent')  studentMeta[code].absent++;
@@ -11074,7 +11275,7 @@ function renderAttReport(){
   if(!Object.keys(studentMeta).length){
     headEl.innerHTML='<th>Info</th>';
     bodyEl.innerHTML=`<tr><td style="color:var(--muted);padding:24px;text-align:center">
-      No attendance records found for this period (${start} → ${end})${stream?' · '+stream:''}.
+      No attendance records found for this period (${start} → ${end})${roomFilter?' · '+roomFilter:''}.
     </td></tr>`;
     return;
   }
@@ -11085,7 +11286,7 @@ function renderAttReport(){
      DAILY  →  columns = 4 fixed periods
   ───────────────────────────────────────── */
   if(period==='daily'){
-    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Stream</th>`
+    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Room</th>`
       +ATT_PERIODS.map(p=>`<th style="text-align:center;white-space:nowrap;min-width:100px">
         <div style="font-size:.72rem;color:var(--muted)">${p.label}</div>
         <div style="font-size:.65rem;color:var(--muted)">${p.time}</div>
@@ -11095,7 +11296,7 @@ function renderAttReport(){
     bodyEl.innerHTML=sortedStudents.map(([code,st],i)=>{
       let p=0,a=0;
       const cells=ATT_PERIODS.map(per=>{
-        const rec=allRecs.find(r=>r.session===per.key);
+        const rec=allRecs.find(r=>r.session===per.key && r.marks && r.marks[code] && matchesRoom(r.marks[code]));
         if(!rec||!rec.marks||!rec.marks[code]) return`<td style="text-align:center;color:var(--border)">—</td>`;
         const s=rec.marks[code].status;
         if(s==='present'){p++; return`<td style="text-align:center;color:#10b981;font-weight:700;font-size:1rem">✔</td>`;}
@@ -11135,11 +11336,11 @@ function renderAttReport(){
     const hasAnyPeriod=dayPeriods.some(dp=>dp.length>0);
     if(!hasAnyPeriod){
       headEl.innerHTML='<th>Info</th>';
-      bodyEl.innerHTML=`<tr><td style="color:var(--muted);padding:24px;text-align:center">No sessions this week (${start} → ${end})${stream?' · '+stream:''}.</td></tr>`;
+      bodyEl.innerHTML=`<tr><td style="color:var(--muted);padding:24px;text-align:center">No sessions this week (${start} → ${end})${roomFilter?' · '+roomFilter:''}.</td></tr>`;
       return;
     }
     // build header: day name spans, then period sub-headers
-    let dayHeader='<tr><th rowspan="2">#</th><th rowspan="2">SDMS Code</th><th rowspan="2">Student Name</th><th rowspan="2">Stream</th>';
+    let dayHeader='<tr><th rowspan="2">#</th><th rowspan="2">SDMS Code</th><th rowspan="2">Student Name</th><th rowspan="2">Room</th>';
     let periodHeader='<tr>';
     dayDates.forEach((ds,di)=>{
       const dp=dayPeriods[di];
@@ -11199,7 +11400,7 @@ function renderAttReport(){
     const d=new Date(refDate+'T00:00:00');
     const weeks=monthWeeks(d.getFullYear(),d.getMonth());
 
-    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Stream</th>`
+    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Room</th>`
       +weeks.map(w=>`<th style="text-align:center;white-space:nowrap;min-width:90px;font-size:.72rem">${w.label}</th>`).join('')
       +`<th style="text-align:center">Present</th><th style="text-align:center">Absent</th><th style="text-align:center">Rate</th>`;
 
@@ -11241,7 +11442,7 @@ function renderAttReport(){
   ───────────────────────────────────────── */
   else if(period==='termly'){
     const TERM_NAMES={'1':'Term I (Jan–Apr)','2':'Term II (May–Aug)','3':'Term III (Sep–Dec)'};
-    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Stream</th>`
+    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Room</th>`
       +ATT_PERIODS.map(p=>`<th style="text-align:center;white-space:nowrap;font-size:.72rem">${p.label}</th>`).join('')
       +`<th style="text-align:center">Sessions</th><th style="text-align:center">Present</th><th style="text-align:center">Absent</th><th style="text-align:center">Rate</th>`;
 
@@ -11286,7 +11487,7 @@ function renderAttReport(){
       {label:'Term II', start:`${yr}-05-01`, end:`${yr}-08-31`},
       {label:'Term III',start:`${yr}-09-01`, end:`${yr}-12-31`},
     ];
-    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Stream</th>`
+    headEl.innerHTML=`<th>#</th><th>SDMS Code</th><th>Student Name</th><th>Room</th>`
       +TERMS.map(t=>`<th style="text-align:center;min-width:100px">${t.label}</th>`).join('')
       +`<th style="text-align:center">Total Present</th><th style="text-align:center">Total Absent</th><th style="text-align:center">Annual Rate</th>`;
 
@@ -11337,7 +11538,7 @@ function downloadAttendancePDF() {
     const cells  = row.querySelectorAll('td');
     const name   = cells[2] ? cells[2].textContent.trim() : '';
     const gender = cells[3] ? cells[3].textContent.trim() : '';
-    const room   = cells[4] ? (cells[4].querySelector('select')||{}).value || '' : '';
+    const room   = cells[4] ? (cells[4].querySelector('select, input')||{}).value || '' : '';
     const rP     = document.getElementById('p_'+code);
     const rA     = document.getElementById('a_'+code);
     const status = rP&&rP.checked ? 'Present' : rA&&rA.checked ? 'Absent' : '—';
@@ -11350,6 +11551,11 @@ function downloadAttendancePDF() {
   const totalCount   = tableRows.length;
   const pct          = totalCount ? Math.round(presentCount/totalCount*100) : 0;
   const pctColor     = pct>=80?'#166534':pct>=50?'#92400e':'#b91c1c';
+  // If the selected value already has a room letter (e.g. "Y3 SME A"),
+  // label it as a Room specifically rather than a generic Class/Stream —
+  // this is exactly the single-room report the person asked for.
+  const isRoomSpecific = /\s[AB]$/.test((stream||'').trim());
+  const streamLabel = isRoomSpecific ? 'Room' : 'Class / Stream';
 
   const bodyRows = tableRows.map((r,i) => {
     const stColor = r.status==='Present'?'#166534':r.status==='Absent'?'#b91c1c':'#555';
@@ -11390,7 +11596,7 @@ function downloadAttendancePDF() {
     <div style="font-size:11px;color:#555">ICT Department — Student eLearning Attendance Register</div>
   </div>
   <div class="meta">
-    <span><strong>Class / Stream:</strong> ${stream||'—'}</span>
+    <span><strong>${streamLabel}:</strong> ${stream||'—'}</span>
     <span><strong>Date:</strong> ${date||'—'}</span>
     <span><strong>Period / Session:</strong> ${session||'—'}</span>
     <span><strong>Printed:</strong> ${new Date().toLocaleDateString('en-GB',{year:'numeric',month:'long',day:'numeric'})}</span>
