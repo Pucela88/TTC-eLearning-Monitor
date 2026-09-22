@@ -7658,9 +7658,33 @@ Open the Smart Classroom HTML file to log in.`;navigator.clipboard.writeText(msg
 if(modalType==="edit-booking"&&editForm.id){return React.createElement("div",{className:"modal"},React.createElement("div",{className:"modal-content"},React.createElement("div",{className:"modal-header"},React.createElement("h3",null,"✏️ Edit Booking")),React.createElement("div",{className:"modal-body"},React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Resource"),React.createElement("input",{type:"text",className:"form-input",value:editForm.resourceName||editForm.resourceId||"",onChange:e=>setEditForm(p=>({...p,resourceName:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Teacher"),React.createElement("input",{type:"text",className:"form-input",value:editForm.teacher||"",onChange:e=>setEditForm(p=>({...p,teacher:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Date"),React.createElement("input",{type:"date",className:"form-input",value:editForm.date||"",onChange:e=>setEditForm(p=>({...p,date:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Time (e.g. 09:00-10:30)"),React.createElement("input",{type:"text",className:"form-input",value:editForm.time||"",onChange:e=>setEditForm(p=>({...p,time:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Subject"),React.createElement("input",{type:"text",className:"form-input",value:editForm.subject||"",onChange:e=>setEditForm(p=>({...p,subject:e.target.value}))})),React.createElement("div",{style:{display:"flex",gap:"1rem"}},React.createElement("button",{type:"button",className:"btn btn-primary",style:{flex:1},onClick:saveEditBooking},"💾 Save Changes"),React.createElement("button",{type:"button",className:"btn btn-secondary",onClick:closeModal},"Cancel")))))}
 if(modalType==="edit-user"&&editForm.id){return React.createElement("div",{className:"modal"},React.createElement("div",{className:"modal-content"},React.createElement("div",{className:"modal-header"},React.createElement("h3",null,"✏️ Edit User")),React.createElement("div",{className:"modal-body"},React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Full Name"),React.createElement("input",{type:"text",className:"form-input",value:editForm.name||"",onChange:e=>setEditForm(p=>({...p,name:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Role"),React.createElement("select",{className:"form-select",value:editForm.role||"Tutor",onChange:e=>setEditForm(p=>({...p,role:e.target.value}))},React.createElement("option",{value:"Admin"},"Admin"),React.createElement("option",{value:"Tutor"},"Tutor"),React.createElement("option",{value:"Librarian"},"Librarian"))),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Email"),React.createElement("input",{type:"email",className:"form-input",value:editForm.email||"",onChange:e=>setEditForm(p=>({...p,email:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Phone Number"),React.createElement("input",{type:"text",className:"form-input",value:editForm.phone||"",onChange:e=>setEditForm(p=>({...p,phone:e.target.value}))})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Department"),React.createElement("input",{type:"text",className:"form-input",value:editForm.department||"",onChange:e=>setEditForm(p=>({...p,department:e.target.value}))})),React.createElement("div",{style:{display:"flex",gap:"1rem"}},React.createElement("button",{type:"button",className:"btn btn-primary",style:{flex:1},onClick:saveEditUser},"💾 Save Changes"),React.createElement("button",{type:"button",className:"btn btn-secondary",onClick:closeModal},"Cancel")))))}
 if(modalType==="user"){return React.createElement("div",{className:"modal"},React.createElement("div",{className:"modal-content"},React.createElement("div",{className:"modal-header"},React.createElement("h3",null,"Add New User")),React.createElement("div",{className:"modal-body"},React.createElement("form",{onSubmit:addUser},React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Full Name"),React.createElement("input",{type:"text",name:"name",className:"form-input",required:true,placeholder:"e.g., John Doe"})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Role"),React.createElement("select",{name:"role",className:"form-select",required:true},React.createElement("option",{value:""},"Select role..."),React.createElement("option",{value:"Teacher"},"Teacher"),React.createElement("option",{value:"Student"},"Student"),React.createElement("option",{value:"Admin"},"Admin"),React.createElement("option",{value:"Staff"},"Staff"))),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Email"),React.createElement("input",{type:"email",name:"email",className:"form-input",required:true,placeholder:"email@delasallettc.edu"})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Phone Number"),React.createElement("input",{type:"tel",name:"phone",className:"form-input",required:true,placeholder:"+250XXXXXXXXX",pattern:"[+]?[0-9]{10,15}"})),React.createElement("div",{className:"form-group"},React.createElement("label",{className:"form-label"},"Department"),React.createElement("input",{type:"text",name:"department",className:"form-input",required:true,list:"departments",placeholder:"e.g., Languages",autoComplete:"off"}),React.createElement("datalist",{id:"departments"},React.createElement("option",{value:"Languages"}),React.createElement("option",{value:"Arts and Humanities"}),React.createElement("option",{value:"Sciences and Mathematics"}))),React.createElement("div",{style:{display:"flex",gap:"1rem"}},React.createElement("button",{type:"submit",className:"btn btn-primary",style:{flex:1}},"Add User"),React.createElement("button",{type:"button",className:"btn btn-secondary",onClick:closeModal},"Cancel"))))))}};
+
 const PublicStudentRegistration=()=>{
   const blank={studentId:"",firstName:"",lastName:"",gender:"",sdmsCode:"",stream:""};
-  const[pf,setPf]=React.useState(blank);
+  /* ── Draft auto-save ──
+     If this component ever gets rebuilt by React while a student is mid-form
+     (which can happen when the app re-renders for unrelated background
+     reasons — live sync, periodic checks, etc.), the fields would normally
+     go blank with no warning. To make that harmless from the student's
+     point of view, every keystroke is saved to this browser's storage, and
+     the form restores itself from that draft the instant it (re)appears —
+     so nothing typed is ever actually lost, even if the component resets
+     behind the scenes. ── */
+  const[pf,setPfRaw]=React.useState(()=>{
+    try{
+      const saved=sessionStorage.getItem("pub-reg-draft");
+      if(saved){const parsed=JSON.parse(saved);if(parsed&&typeof parsed==="object")return{...blank,...parsed}}
+    }catch(e){}
+    return blank;
+  });
+  const setPf=updater=>{
+    setPfRaw(prev=>{
+      const next=typeof updater==="function"?updater(prev):updater;
+      try{sessionStorage.setItem("pub-reg-draft",JSON.stringify(next));}catch(e){}
+      return next;
+    });
+  };
+  const clearDraft=()=>{try{sessionStorage.removeItem("pub-reg-draft");}catch(e){}};
   const[pDone,setPDone]=React.useState(false);
   const[pErr,setPErr]=React.useState("");
   const[pMode,setPMode]=React.useState("register");
@@ -7699,6 +7723,7 @@ const PublicStudentRegistration=()=>{
     if(!pf.studentId||!pf.firstName||!pf.lastName||!pf.gender||!pf.stream){setPErr("Please fill in Student ID, First Name, Last Name, Gender and Stream.");return}
     const existing=attStudents.find(s=>s.studentId.trim().toLowerCase()===pf.studentId.trim().toLowerCase());
     if(existing){setPErr("A matching registration already exists: "+existing.firstName+" "+existing.lastName+" ("+existing.stream+", ID "+existing.studentId+"). Use \"Fix or Delete Mine\" above if this is you.");return}
+    clearDraft();
     const genId=(_dbOrNull()&&_dbOrNull().ref("attendanceStudents").push().key)||("pub-"+Date.now()+"-"+Math.random().toString(36).slice(2,8));
     const newStudent={...pf,id:genId,registeredAt:new Date().toISOString(),selfRegistered:true};
     const updated=[newStudent,...attStudents];
@@ -7761,7 +7786,7 @@ const PublicStudentRegistration=()=>{
         React.createElement("div",{style:{fontWeight:"700",color:isDarkMode?"#e9d5ff":"#4c1d95",marginBottom:"0.5rem"}},"You're registered!"),
         pErr&&React.createElement("div",{style:{fontSize:"0.8rem",color:"#f59e0b",marginBottom:"0.75rem"}},pErr),
         React.createElement("div",{style:{display:"flex",gap:"10px",justifyContent:"center",flexWrap:"wrap"}},
-          React.createElement("button",{onClick:()=>{setPf(blank);setPDone(false);setPErr("")},style:{padding:"9px 16px",borderRadius:"8px",border:"1px solid #a855f7",background:"rgba(168,85,247,0.1)",color:"#a855f7",fontWeight:"700",cursor:"pointer"}},"Register Another"),
+          React.createElement("button",{onClick:()=>{clearDraft();setPf(blank);setPDone(false);setPErr("")},style:{padding:"9px 16px",borderRadius:"8px",border:"1px solid #a855f7",background:"rgba(168,85,247,0.1)",color:"#a855f7",fontWeight:"700",cursor:"pointer"}},"Register Another"),
           React.createElement("button",{onClick:()=>setShowPublicRegistration(false),style:{padding:"9px 16px",borderRadius:"8px",border:"none",background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:"700",cursor:"pointer"}},"\u2190 Back to Login")
         )
       ):React.createElement("form",{onSubmit:submit,style:{display:"flex",flexDirection:"column",gap:"0.9rem"}},
@@ -8829,7 +8854,7 @@ function loadDocsFromFirebase() {
 <!-- ══════ ABOUT US PANEL ══════ -->
 <div class="panel-overlay" id="panel-about" onclick="closePanelOutside(event,'about')">
 
-  <div class="panel-box">
+  <div class="panel-box" style="max-width:calc(100vw - 24px);width:calc(100vw - 24px);max-height:calc(100vh - 24px);height:calc(100vh - 24px)">
     <div class="panel-top-bar" style="background:linear-gradient(90deg,#10b981,#34d399)"></div>
     <div class="panel-head">
       <div class="panel-head-ic" style="background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.3)">🏛️</div>
@@ -8865,11 +8890,15 @@ function loadDocsFromFirebase() {
       <div class="panel-section-title">Our Mission</div>
       <div class="about-card">
         <h3 style="color:#34d399">📖 Mission</h3>
-        <p>To provide quality teacher education rooted in Catholic values, nurturing competent, reflective and ethical teachers who contribute to Rwanda's national development through the transformation of education.</p>
+        <p>Enriched by the Lasallian Catholic tradition, TTC De La Salle awakens, nurtures, empowers and transforms preservice teachers to ethical lives of societal service and leadership.</p>
+      </div>
+      <div class="about-card">
+        <h3 style="color:#fbbf24">🌟 Vision</h3>
+        <p>To be an outstanding hub of the needed Rwandan teachers whose life of faith, fraternity, service and leadership — which are directed toward the common good — will become society's defining features.</p>
       </div>
       <div class="about-card">
         <h3 style="color:#00d4aa">🔬 Smart Classroom Initiative</h3>
-        <p>This portal is the heart of our Smart Classroom Resource Manager — a digital ecosystem that integrates REB eLearning progress tracking, ICT lab management, library systems, and classroom equipment inventory into one unified platform, empowering teachers and administrators with real-time data.</p>
+        <p>This portal is the heart of our Smart Classroom Resource Manager — a live digital ecosystem connecting REB eLearning progress tracking, student attendance with room-level precision, an ICT equipment borrow/return logbook, library and resource booking, and a shared photo and video gallery, all in one platform. Students can register themselves from any device, anywhere, and their information reaches every classroom and every teacher instantly. Built for TTC De La Salle Byumba to keep teaching, tracking, and reporting connected in real time — on any computer, at any time.</p>
       </div>
 
       <div class="panel-divider"></div>
@@ -8937,7 +8966,7 @@ function loadDocsFromFirebase() {
 
 <!-- ══════ CONTACT US PANEL ══════ -->
 <div class="panel-overlay" id="panel-contact" onclick="closePanelOutside(event,'contact')">
-  <div class="panel-box">
+  <div class="panel-box" style="max-width:calc(100vw - 24px);width:calc(100vw - 24px);max-height:calc(100vh - 24px);height:calc(100vh - 24px)">
     <div class="panel-top-bar" style="background:linear-gradient(90deg,#f97316,#fb923c)"></div>
     <div class="panel-head">
       <div class="panel-head-ic" style="background:rgba(249,115,22,.14);border:1px solid rgba(249,115,22,.3)">📞</div>
