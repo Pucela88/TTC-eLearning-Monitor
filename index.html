@@ -7405,7 +7405,67 @@ let _submittingStatus=false;const submitStatus=e=>{e.preventDefault();if(_submit
   if(window._fbLogbookEquip&&window._fbLogbookEquip.length>0){setLbEquipment(window._fbLogbookEquip)}
   return()=>{window._fbLogbookEntriesCallback=null;window._fbLogbookEquipCallback=null};
 },[]);
-useEffect(()=>{try{const ed=lbStorage.get("equipment-list");if(ed){setLbEquipment(JSON.parse(ed.value))}else{const sample=[{id:"1",name:"Desktop Computer",category:"ICT Hardware",status:"available",archived:false},{id:"2",name:"Laptop",category:"ICT Hardware",status:"available",archived:false},{id:"3",name:"Projector",category:"Presentation",status:"available",archived:false},{id:"4",name:"Network Switch",category:"Networking",status:"available",archived:false},{id:"5",name:"Printer",category:"Peripherals",status:"available",archived:false}];setLbEquipment(sample);lbStorage.set("equipment-list",JSON.stringify(sample))}const en=lbStorage.get("usage-entries");if(en)setLbEntries(JSON.parse(en.value))}catch(e){}finally{setLbLoading(false)}},[]);const saveEquip=eq=>{lbStorage.set("equipment-list",JSON.stringify(eq));setLbEquipment(eq)};const saveEntries=en=>{lbStorage.set("usage-entries",JSON.stringify(en));setLbEntries(en)};const LB_ROOMS=["ICT Room 1","ICT Room 2","ICT Room 3","Library","Staff Room","Classroom","Other"];
+useEffect(()=>{
+    // Local data first, so the page is never blank while we wait on the network.
+    try{
+      const ed=lbStorage.get("equipment-list");
+      if(ed){setLbEquipment(JSON.parse(ed.value))}
+      else{
+        const sample=[{id:"1",name:"Desktop Computer",category:"ICT Hardware",status:"available",archived:false},{id:"2",name:"Laptop",category:"ICT Hardware",status:"available",archived:false},{id:"3",name:"Projector",category:"Presentation",status:"available",archived:false},{id:"4",name:"Network Switch",category:"Networking",status:"available",archived:false},{id:"5",name:"Printer",category:"Peripherals",status:"available",archived:false}];
+        setLbEquipment(sample);lbStorage.set("equipment-list",JSON.stringify(sample));
+      }
+      const en=lbStorage.get("usage-entries");if(en)setLbEntries(JSON.parse(en.value));
+    }catch(e){}finally{setLbLoading(false)}
+
+    /* ── Direct, self-contained Firebase sync ──
+       This used to depend entirely on an app-wide patch that silently
+       intercepted localStorage writes and pushed them to Firebase behind
+       the scenes, plus a separate one-time pull on page load. Both had to
+       run in exactly the right order relative to this component for
+       syncing to work, which is brittle and gave no visible confirmation
+       of what was happening. This listens to Firebase directly instead:
+       it attaches as soon as the connection is ready (retrying until it
+       is, how long ever that takes), and after that every save here and
+       on every other computer flows straight through the same two-way
+       connection — no hidden intermediary, no ordering to get right. */
+    let entriesRef=null, equipRef=null, cancelled=false;
+    const attach=()=>{
+      const _db=_dbOrNull();
+      if(!_db){ if(!cancelled) setTimeout(attach,1500); return; }
+      entriesRef=_db.ref("logbookEntries");
+      entriesRef.on("value",snap=>{
+        const data=snap.val();
+        const arr=data?Object.values(data):[];
+        setLbEntries(arr);
+        try{lbStorage.set("usage-entries",JSON.stringify(arr))}catch(e){}
+      });
+      equipRef=_db.ref("logbookEquipment");
+      equipRef.on("value",snap=>{
+        const data=snap.val();
+        if(data){
+          const arr=Object.values(data);
+          setLbEquipment(arr);
+          try{lbStorage.set("equipment-list",JSON.stringify(arr))}catch(e){}
+        }
+      });
+    };
+    attach();
+    return ()=>{cancelled=true;if(entriesRef)entriesRef.off();if(equipRef)equipRef.off()};
+  },[]);
+  const saveEquip=eq=>{
+    lbStorage.set("equipment-list",JSON.stringify(eq));
+    setLbEquipment(eq);
+    const _db=_dbOrNull();
+    const obj={};eq.forEach(item=>{obj[item.id]=item});
+    if(_db)_db.ref("logbookEquipment").set(obj).catch(err=>console.warn("Equipment sync failed, will retry on next save:",err.message));
+  };
+  const saveEntries=en=>{
+    lbStorage.set("usage-entries",JSON.stringify(en));
+    setLbEntries(en);
+    const _db=_dbOrNull();
+    const obj={};en.forEach(item=>{obj[item.id]=item});
+    if(_db)_db.ref("logbookEntries").set(obj).catch(err=>console.warn("Logbook entry sync failed, will retry on next save:",err.message));
+  };const LB_ROOMS=["ICT Room 1","ICT Room 2","ICT Room 3","Library","Staff Room","Classroom","Other"];
 const logBorrow=e=>{e.preventDefault();const fd=new FormData(e.target);const name=lbEqInput.trim();if(!name){alert("Please enter or select equipment name");return}let eqId;const existing=lbEquipment.find(eq=>eq.name.toLowerCase()===name.toLowerCase()&&!eq.archived);if(existing){eqId=existing.id}else{eqId=Date.now().toString();saveEquip([...lbEquipment,{id:eqId,name,category:"General",status:"available",archived:false}])}const entry={id:Date.now().toString(),equipmentId:eqId,userName:fd.get("userName"),room:fd.get("room"),purpose:fd.get("purpose")||"",checkOut:fd.get("checkOut"),checkIn:null,status:"in-use",notes:fd.get("notes")||""};saveEntries([entry,...lbEntries]);setLbShowEquip(false);setLbEqInput("");e.target.reset()};const toggleArchive=id=>{if(currentUserRole!=="Admin"){alert("\uD83D\uDD12 Access Denied: Only administrators can archive equipment.");return}saveEquip(lbEquipment.map(eq=>eq.id===id?{...eq,archived:!eq.archived}:eq))};const deleteEquipment=id=>{if(currentUserRole!=="Admin"){alert("\uD83D\uDD12 Access Denied: Only administrators can delete equipment.");return}if(!window.confirm("Permanently delete this equipment?"))return;saveEquip(lbEquipment.filter(eq=>eq.id!==id))};const checkIn=id=>saveEntries(lbEntries.map(e=>e.id===id?{...e,checkIn:new Date().toISOString().slice(0,16),status:"completed"}:e));const getEqName=id=>{const eq=lbEquipment.find(e=>e.id===id);return eq?eq.name:"Unknown"};const logReturn=e=>{e.preventDefault();const fd=new FormData(e.target);const entryId=fd.get("entryId");if(!entryId){alert("Please select which borrowed equipment is being returned.");return}const checkInVal=fd.get("checkIn")||new Date().toISOString().slice(0,16);saveEntries(lbEntries.map(en=>en.id===entryId?{...en,checkIn:checkInVal,status:"completed",returnNotes:fd.get("notes")||""}:en));setLbShowEntry(false);setLbEqInput("");e.target.reset()};const exportCSV=()=>{if(currentUserRole!=="Admin"){alert("\uD83D\uDD12 Access Denied: Only administrators can export data.");return}const rows=lbEntries.map(e=>[`"${getEqName(e.equipmentId)}"`,`"${e.userName}"`,`"${e.room||""}"`,`"${e.purpose||""}"`,`"${new Date(e.checkOut).toLocaleString()}"`,`"${e.checkIn?new Date(e.checkIn).toLocaleString():"Not Yet Returned"}"`,`"${e.status}"`,`"${e.notes||""}"`].join(","));const csv=["Equipment,User,Room,Purpose,Borrowed Date,Returning Date,Status,Notes",...rows].join("\n");const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),download:`equipment-log-${new Date().toISOString().split("T")[0]}.csv`});a.click()};const activeEquip=lbEquipment.filter(eq=>!eq.archived);const archivedEquip=lbEquipment.filter(eq=>eq.archived);const filtered=lbEntries.filter(en=>{const s=lbSearch.toLowerCase();return(en.userName.toLowerCase().includes(s)||getEqName(en.equipmentId).toLowerCase().includes(s)||en.purpose.toLowerCase().includes(s))&&(lbFilter==="all"||en.equipmentId===lbFilter)});const D=isDarkMode?{bg:"#171717",bgSec:"#262626",bgTer:"#404040",text:"#f5f5f5",textSec:"#a3a3a3",textTer:"#737373",border:"#404040",border2:"#525252",accent:"#f59e0b",accentHv:"#d97706",amber:"#fbbf24",hdr:"linear-gradient(to right,#262626,#171717)",infoBox:"#1e3a5f",infoBdr:"#3b82f6",infoTxt:"#93c5fd",infoBody:"#bfdbfe",inputBg:"#171717",modalBg:"#262626"}:{bg:"#f5f3ff",bgSec:"#ede9fe",bgTer:"#ddd6fe",text:"#1e1b4b",textSec:"#4c1d95",textTer:"#6d28d9",border:"#c4b5fd",border2:"#a78bfa",accent:"#f59e0b",accentHv:"#d97706",amber:"#7c3aed",hdr:"linear-gradient(to right,#ede9fe,#f5f3ff)",infoBox:"#ede9fe",infoBdr:"#c4b5fd",infoTxt:"#6d28d9",infoBody:"#4c1d95",inputBg:"#fff",modalBg:"#f5f3ff"};const btnStyle={cursor:"pointer",transition:"all 0.2s"};useEffect(()=>{
     const reconcile=()=>{
       const online=typeof USE_FIREBASE!=="undefined"&&USE_FIREBASE&&window.db;
