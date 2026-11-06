@@ -2394,6 +2394,7 @@ function initFirebase(overrideCfg) {
     console.warn('Firebase init failed, using localStorage: ReferenceError: firebase is not defined');
     USE_FIREBASE = false;
     if (typeof setSyncBadge === 'function') setSyncBadge('offline');
+    if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('disconnected');
     return false;
   }
   try {
@@ -2428,8 +2429,10 @@ function initFirebase(overrideCfg) {
     db.ref('.info/connected').on('value', function(snap) {
       if (snap.val() === true) {
         if (typeof setSyncBadge === 'function') setSyncBadge('synced');
+        if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('connected');
       } else {
         if (typeof setSyncBadge === 'function') setSyncBadge('offline');
+        if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('reconnecting');
       }
     });
 
@@ -5164,21 +5167,22 @@ async function saveFirebaseConfig() {
   }
 }
 function loadFirebaseFields(show=true) {
-  const raw = localStorage.getItem('ttcFirebaseConfig');
-  if (!raw) { updateFirebaseStatus('disconnected'); return; }
-  const cfg = JSON.parse(raw);
+  let cfg = null;
+  try { cfg = JSON.parse(localStorage.getItem('ttcFirebaseConfig') || 'null'); } catch(e) {}
+  if (!cfg || !cfg.apiKey || !cfg.projectId) cfg = FIREBASE_CONFIG;   /* built-in values are always the fallback */
   FB_FIELDS.forEach(f => {
     const el = document.getElementById('fb_'+f);
     if (el) el.value = cfg[f] || '';
   });
-  if (cfg.apiKey) updateFirebaseStatus('configured');
+  updateFirebaseStatus((typeof USE_FIREBASE !== 'undefined' && USE_FIREBASE && db) ? 'connected' : 'configured');
 }
 function clearFirebaseConfig() {
-  if (!confirm('Clear saved Firebase configuration?')) return;
-  localStorage.removeItem('ttcFirebaseConfig');
-  FB_FIELDS.forEach(f => { const el=document.getElementById('fb_'+f); if(el) el.value=''; });
-  updateFirebaseStatus('disconnected');
-  toast('Firebase config cleared');
+  if (!confirm('Reset the Firebase settings to the school\'s built-in configuration?')) return;
+  try { localStorage.setItem('ttcFirebaseConfig', JSON.stringify(FIREBASE_CONFIG)); } catch(e) {}
+  FB_FIELDS.forEach(f => { const el=document.getElementById('fb_'+f); if(el) el.value = FIREBASE_CONFIG[f] || ''; });
+  updateFirebaseStatus('testing');
+  try { if (typeof firebase !== 'undefined') initFirebase(); } catch(e) {}
+  toast('Firebase settings reset to the built-in configuration');
 }
 
 async function resetSystem() {
@@ -5215,7 +5219,11 @@ async function resetSystem() {
 }
 function updateFirebaseStatus(state) {
   const el = document.getElementById('fbStatus');
-  if (state === 'connected') {
+  if (!el) return;
+  if (state === 'reconnecting') {
+    el.className = 'firebase-status testing';
+    el.innerHTML = '<span class="fb-dot"></span> Reconnecting…';
+  } else if (state === 'connected') {
     el.className = 'firebase-status connected';
     el.innerHTML = '<span class="fb-dot"></span> Connected';
   } else if (state === 'testing') {
@@ -5331,35 +5339,15 @@ checkSession();
 (async () => {
   // ── Auto-inject Firebase config into localStorage on first load ──
   (function autoSaveFirebaseConfig() {
-    var existing = localStorage.getItem('ttcFirebaseConfig');
-    var builtIn = {
-      apiKey: "AIzaSyAM1FkvmHxuiMySyJ-350HwnESQxQle5MI",
-      authDomain: "ttc-elearning-monitor.firebaseapp.com",
-      databaseURL: "https://ttc-elearning-monitor-default-rtdb.firebaseio.com",
-      projectId: "ttc-elearning-monitor",
-      storageBucket: "ttc-elearning-monitor.firebasestorage.app",
-      messagingSenderId: "381730856086",
-      appId: "1:381730856086:web:9684b6a4aeb0136b5bb6b7",
-      measurementId: "G-D715QYZ48V"
-    };
-    if (!existing) {
-      localStorage.setItem('ttcFirebaseConfig', JSON.stringify(builtIn));
-    } else {
-      // patch databaseURL if it was missing/wrong
-      try {
-        var saved = JSON.parse(existing);
-        if (!saved.databaseURL || saved.databaseURL.indexOf('ttc-elearning-monitor') === -1) {
-          saved.databaseURL = builtIn.databaseURL;
-          saved.apiKey = builtIn.apiKey;
-          saved.authDomain = builtIn.authDomain;
-          saved.projectId = builtIn.projectId;
-          saved.storageBucket = builtIn.storageBucket;
-          saved.messagingSenderId = builtIn.messagingSenderId;
-          saved.appId = builtIn.appId;
-          localStorage.setItem('ttcFirebaseConfig', JSON.stringify(saved));
-        }
-      } catch(e) {}
-    }
+    /* The school's Firebase project is built into this file (FIREBASE_CONFIG). Browser storage only holds a
+       copy of it, so every device, browser and web address starts from the correct values and nobody has to
+       type or save anything. A missing, blank or other-project copy is replaced automatically. */
+    var req = ['apiKey','authDomain','databaseURL','projectId','storageBucket','messagingSenderId','appId'];
+    try {
+      var saved = JSON.parse(localStorage.getItem('ttcFirebaseConfig') || 'null');
+      var ok = saved && saved.projectId === FIREBASE_CONFIG.projectId && req.every(function (k) { return saved[k]; });
+      if (!ok) localStorage.setItem('ttcFirebaseConfig', JSON.stringify(FIREBASE_CONFIG));
+    } catch (e) { /* storage blocked: the built-in config is still used directly */ }
   })();
   prefillFirebaseFields();
   loadFirebaseFields(false);
