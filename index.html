@@ -2341,6 +2341,7 @@ function prefillFirebaseFields() {
 let db = null;
 let USE_FIREBASE = false;
 let _rebInitRetryCount = 0;
+let _rebConnected = false;   /* true only while the live socket to Firebase is up */
 let _rebInitRetryTimer = null;
 
 // If the browser regains internet access at any point, immediately retry
@@ -2348,6 +2349,7 @@ let _rebInitRetryTimer = null;
 // that open the page before Wi-Fi has fully associated, or reconnect after
 // a temporary drop.
 window.addEventListener('online', function() {
+  try { if (db && db.goOnline) db.goOnline(); } catch(e) {}
   if (!USE_FIREBASE) {
     console.log('Back online — retrying Firebase connection...');
     _rebInitRetryCount = 0;
@@ -2384,6 +2386,12 @@ function _rebConnectionWatchdog() {
   }
 }
 setInterval(_rebConnectionWatchdog, 20000);
+/* Coming back to the tab / unlocking the phone: make sure the connection is awake and pending records go up. */
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState !== 'visible') return;
+  try { if (db && db.goOnline) db.goOnline(); } catch(e) {}
+  if (typeof syncPendingToFirebase === 'function') syncPendingToFirebase();
+});
 // Run once shortly after load too, so the pills reflect reality quickly
 // rather than showing the static default text for the first 20 seconds.
 setTimeout(_rebConnectionWatchdog, 4000);
@@ -2400,15 +2408,33 @@ function initFirebase(overrideCfg) {
   try {
     const cfg = overrideCfg || Object.assign({}, FIREBASE_CONFIG,
       { databaseURL: 'https://ttc-elearning-monitor-default-rtdb.firebaseio.com' });
+    const sig = JSON.stringify(cfg);
 
-    /* ── CRITICAL FIX: delete stale named-app instances before re-initializing.
-       firebase.initializeApp() throws if the name already exists, which is what
-       causes Firebase to "disconnect" every time Test/Save Config is clicked. ── */
-    firebase.apps
-      .filter(a => a.name === 'reb-app' || a.name === 'smart-classroom')
-      .forEach(function(a) { try { a.delete(); } catch(e) {} });
+    /* ── ONE permanent connection ──
+       This function is called from several places during page load (SDK ready, REB boot, the watchdog,
+       "back online", Save Config). Each call used to delete the live Firebase app and build a new one, so the
+       connection was torn down and rebuilt again and again and could end up dead — the app then stayed on
+       "Local". Now, if a connection with this exact configuration already exists, it is KEPT and re-used.
+       It is only replaced when the configuration itself really changes. ── */
+    const existing = firebase.apps.filter(a => a.name === 'reb-app')[0];
+    if (existing && window.__rebCfgSig === sig && db && USE_FIREBASE) {
+      return true;
+    }
 
-    const rebApp = firebase.initializeApp(cfg, 'reb-app');
+    let rebApp, fresh = false;
+    if (existing && window.__rebCfgSig === sig) {
+      rebApp = existing;                       /* same configuration: re-use the existing app */
+    } else {
+      const hadProgressListener = _rebProgressListenerAttached;
+      firebase.apps
+        .filter(a => a.name === 'reb-app' || a.name === 'smart-classroom')
+        .forEach(function(a) { try { a.delete(); } catch(e) {} });
+      rebApp = firebase.initializeApp(cfg, 'reb-app');
+      window.__rebCfgSig = sig;
+      fresh = true;
+      _rebProgressListenerAttached = false;     /* old listeners died with the old app */
+      if (hadProgressListener) setTimeout(function() { attachProgressRealtimeListener(); }, 0);
+    }
     db = rebApp.database();
     window.db = db;   /* share with Smart Classroom module */
     try { window.videoStorage = rebApp.storage(); } catch(e) { console.warn('Firebase Storage init failed:', e.message); }
@@ -2416,29 +2442,29 @@ function initFirebase(overrideCfg) {
     if (typeof setSyncBadge === 'function') setSyncBadge('syncing');
     console.log('Firebase Realtime Database initialised (REB)');
 
-    /* ── Live connection tracker ──
-       Firebase's own ".info/connected" node tells us the TRUE state of the
-       socket to Firebase's servers, independent of whether any particular
-       read/write succeeded. Without this, the badge only ever reflected the
-       outcome of the last data operation — so if one write failed (e.g. a
-       Firebase Rules permission problem) the badge got stuck on "Offline"
-       forever afterward, even with a perfectly good internet connection and
-       even after connectivity/permissions were restored. This listener
-       fixes that: the badge now updates immediately, in both directions,
-       whenever the real connection state changes. ── */
-    db.ref('.info/connected').on('value', function(snap) {
-      if (snap.val() === true) {
-        if (typeof setSyncBadge === 'function') setSyncBadge('synced');
-        if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('connected');
-      } else {
-        if (typeof setSyncBadge === 'function') setSyncBadge('offline');
-        if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('reconnecting');
-      }
-    });
+    /* Live connection tracker (attached once per database instance). Firebase's own ".info/connected" node
+       is the TRUE state of the socket. When it turns true, anything saved while offline is pushed up. */
+    if (!db.__ttcConnListener) {
+      db.__ttcConnListener = true;
+      db.ref('.info/connected').on('value', function(snap) {
+        if (snap.val() === true) {
+          _rebConnected = true;
+          if (typeof setSyncBadge === 'function') setSyncBadge('synced');
+          if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('connected');
+          if (typeof syncPendingToFirebase === 'function') syncPendingToFirebase();
+        } else {
+          _rebConnected = false;
+          if (typeof setSyncBadge === 'function') setSyncBadge('offline');
+          if (typeof updateFirebaseStatus === 'function') updateFirebaseStatus('reconnecting');
+        }
+      });
+    }
 
-    /* Notify Smart Classroom React app */
-    window._firebaseReady = true;
-    window.dispatchEvent(new CustomEvent('firebaseReady'));
+    if (fresh) {
+      /* Notify Smart Classroom React app */
+      window._firebaseReady = true;
+      window.dispatchEvent(new CustomEvent('firebaseReady'));
+    }
     _rebInitRetryCount = 0;
     clearTimeout(_rebInitRetryTimer);
     if (typeof _rebConnectionWatchdog === 'function') _rebConnectionWatchdog();
@@ -2487,14 +2513,84 @@ const LOCAL = {
 // In-memory cache so renders stay fast
 const CACHE = { students: null, progress: null };
 
+// ── Offline-safe saving ──
+// Anything saved while Firebase is not connected (or whose write fails) is marked "pending". As soon as the
+// connection is up, pending records are MERGED into the cloud copy (never overwriting what other devices
+// added), so recorded data always ends up synced.
+const PENDING_KEY = 'ttcv3_pending';
+function _pendingGet() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch(e) { return []; } }
+function _pendingSet(a) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(a)); } catch(e) {} }
+function markPending(k) { const a = _pendingGet(); if (a.indexOf(k) < 0) { a.push(k); _pendingSet(a); } }
+function clearPending(k) { _pendingSet(_pendingGet().filter(x => x !== k)); }
+function _recKey(k, r) { return k === 'students' ? String(r && r.id) : String(r && r.id) + '|' + String((r && r.studentId) || ''); }
+function _mergeRecords(k, srv, loc) {
+  const out = srv.slice(), idx = {};
+  out.forEach((r, i) => { idx[_recKey(k, r)] = i; });
+  let maxId = out.reduce((m, r) => Math.max(m, +(r && r.id) || 0), 0);
+  loc.forEach(r => {
+    if (!r) return;
+    const key = _recKey(k, r);
+    if (key in idx) { out[idx[key]] = r; return; }                 /* same record: keep this device's version */
+    if (k === 'progress' && out.some(o => o && o.id === r.id)) r = Object.assign({}, r, { id: ++maxId });  /* id clash with another device */
+    idx[_recKey(k, r)] = out.length;
+    out.push(r);
+  });
+  return out;
+}
+let _syncingPending = false;
+async function syncPendingToFirebase() {
+  if (_syncingPending || !USE_FIREBASE || !db || !_rebConnected) return;
+  const keys = _pendingGet();
+  if (!keys.length) return;
+  _syncingPending = true;
+  let changed = false;
+  try {
+    for (const k of keys) {
+      const loc = LOCAL.get(k);
+      const res = await db.ref('rebData/' + k).transaction(cur => {
+        const srv = Array.isArray(cur) ? cur.slice() : (cur && typeof cur === 'object' ? Object.values(cur) : []);
+        return _mergeRecords(k, srv, Array.isArray(loc) ? loc : []);
+      });
+      if (res.committed) {
+        const v = res.snapshot.exists() ? res.snapshot.val() : [];
+        const arr = Array.isArray(v) ? v : Object.values(v || {});
+        CACHE[k] = arr; LOCAL.set(k, arr);
+        clearPending(k);
+        changed = true;
+      }
+    }
+    if (changed) {
+      setSyncBadge('synced');
+      toast('Records saved offline are now synced to Firebase');
+      try { renderDashboard(); } catch(e) {}
+      ['students', 'progress'].forEach(function(pg) {
+        const el = document.getElementById('page-' + pg);
+        if (el && el.classList.contains('active')) { try { pg === 'students' ? renderStudents() : (populateProgressFilters(), renderProgress()); } catch(e) {} }
+      });
+    }
+  } catch(e) {
+    console.warn('Pending sync failed — will retry:', e);
+  } finally {
+    _syncingPending = false;
+  }
+}
+
 const DB = {
   get: k => CACHE[k] !== null && CACHE[k] !== undefined ? CACHE[k] : LOCAL.get(k),
   set: async (k, v) => {
     CACHE[k] = v;
     LOCAL.set(k, v); // always persist locally too
+    markPending(k);  // stays "pending" until Firebase confirms the write
+    if (!(USE_FIREBASE && db && _rebConnected)) {
+      /* Not connected right now: keep it on this device and sync automatically when the connection is up.
+         (Not queued inside the SDK, so it can never overwrite newer data from other devices on reconnect.) */
+      toast('Saved on this device — it will sync automatically when Firebase is connected');
+      return;
+    }
     if (USE_FIREBASE && db) {
       try {
         await db.ref('rebData/' + k).set(v);
+        clearPending(k);
         setSyncBadge('synced');
       } catch(e) {
         console.warn('Realtime DB write failed:', e);
@@ -2526,7 +2622,7 @@ function purgeRemovedStreams() { /* no-op: Year 3 is active again after promotio
    devices adding/removing at once can never wipe each other out.
    mutatorFn receives a COPY of the current array and returns the new one. */
 async function DBmutate(key, mutatorFn) {
-  if (USE_FIREBASE && db) {
+  if (USE_FIREBASE && db && _rebConnected) {
     try {
       const result = await db.ref('rebData/' + key).transaction(cur => {
         const arr = Array.isArray(cur) ? cur.slice() : (cur && typeof cur === 'object' ? Object.values(cur) : []);
@@ -2538,6 +2634,7 @@ async function DBmutate(key, mutatorFn) {
         const normalized = Array.isArray(finalArr) ? finalArr : Object.values(finalArr || {});
         CACHE[key] = normalized;
         LOCAL.set(key, normalized);
+        clearPending(key);
         setSyncBadge('synced');
         return normalized;
       }
@@ -2564,6 +2661,7 @@ function attachProgressRealtimeListener() {
   if (!USE_FIREBASE || !db || _rebProgressListenerAttached) return;
   _rebProgressListenerAttached = true;
   db.ref('rebData/progress').on('value', function(snap) {
+    if (_pendingGet().indexOf('progress') >= 0) { syncPendingToFirebase(); return; }   /* local records not synced yet: merge first */
     const val = snap.exists() ? snap.val() : [];
     CACHE.progress = val;
     LOCAL.set('progress', val);
@@ -2613,12 +2711,13 @@ async function loadFromFirebase() {
       db.ref('rebData/progress').once('value'),
     ]);
     let changed = false;
-    if (studSnap.exists()) {
+    const _pend = _pendingGet();
+    if (studSnap.exists() && _pend.indexOf('students') < 0) {
       CACHE.students = studSnap.val();
       LOCAL.set('students', CACHE.students);
       changed = true;
     }
-    if (progSnap.exists()) {
+    if (progSnap.exists() && _pend.indexOf('progress') < 0) {
       CACHE.progress = progSnap.val();
       LOCAL.set('progress', CACHE.progress);
       changed = true;
@@ -5373,6 +5472,7 @@ checkSession();
       await migrateToFirebase();
       await loadFromFirebase();
       attachProgressRealtimeListener();
+      syncPendingToFirebase();
     } catch(e) {
       console.warn('REB boot error:', e);
     }
@@ -5380,6 +5480,8 @@ checkSession();
     (function(){
       const sts = DB.get('students');
       if (!sts || !sts.length) return;
+      /* only write when something actually needs fixing, so a normal page load never creates pending changes */
+      if (!sts.some(s => s.username !== s.id || s.email !== s.id + '@reb.ac.rw')) return;
       const fixed = sts.map(s => ({
         ...s,
         username: s.id,
