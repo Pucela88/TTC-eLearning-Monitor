@@ -2291,6 +2291,9 @@ function getStemGradeConfig(courseCode, stream) {
   return STEM_GRADE_CONFIG[`${courseCode}-${group}`] || { assessMax:100, assessPass:50, practiceMax:30, practicePass:15, total:130 };
 }
 
+/* English Teacher Development levels (B = Beginner, I = Intermediate) — was missing, which stopped the whole page script before Firebase started */
+const ETD_LEVELS = ['B1L1','B2L1','B3L1','I1L1','I2L1','I3L1'];
+
 const MASTER_COURSES = [
   { code:'ETD',  title:'English Teacher Development', type:'ETD',  streams:ALL_STREAMS,
     modules: ETD_LEVELS.flatMap(lvl => [`${lvl}-V1`,`${lvl}-V2`,`${lvl}-V3`,`${lvl}-STD`]) },
@@ -11618,7 +11621,7 @@ async function nsConfirmImport() {
     return [...arr, ...toAdd.filter(s => !have.has(s.id))];
   });
   renderStudents();
-  updateStats();
+  try { if (typeof renderDashboard === 'function') renderDashboard(); } catch (e) {}
   _refreshAttendanceAfterStudentChange();
 
   const skipped = _nsParsed.filter(s => s._dup).length;
@@ -11789,7 +11792,7 @@ async function wsSave() {
     return arr.concat(toAdd.filter(function(s){return !have.has(s.id);}));
   });
   renderStudents();
-  updateStats();
+  try { if (typeof renderDashboard === 'function') renderDashboard(); } catch (e) {}
   _refreshAttendanceAfterStudentChange();
   closeModal('addStudentModal');
   // reset stream panel
@@ -13665,10 +13668,21 @@ function exportAttendanceCSV(){
   var C = { u: null, view: 'home', sub: 'exams', tab: 'student', exams: {}, subs: {}, papers: {}, assign: {}, tutors: {}, csub: {}, offset: 0, q: [], cur: null, lock: false, sid: Math.random().toString(36).slice(2), ps: '', pf: { s: '', y: '', t: '', c: '' } };
   var $ = function (i) { return document.getElementById(i); };
   var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var LITE = null;
+  var LITE = null, _direct = null;
+  function loadScript(src) { return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+  /* If the main connection never started on this device, build our own: load the Firebase database library (two sources) and connect. */
+  function ensureDb() {
+    var d0 = db(); if (d0) return Promise.resolve(d0);
+    var cfgOk = false; try { cfgOk = typeof FIREBASE_CONFIG !== 'undefined'; } catch (e) {}
+    if (typeof firebase === 'undefined' || !cfgOk) return Promise.resolve(null);
+    var need = typeof firebase.database === 'function' ? Promise.resolve() : loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js').catch(function () { return loadScript('https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-database-compat.js'); });
+    return need.then(function () {
+      try { var app; try { app = firebase.app('cbt-direct'); } catch (e) { app = firebase.initializeApp(Object.assign({}, FIREBASE_CONFIG, { databaseURL: 'https://ttc-elearning-monitor-default-rtdb.firebaseio.com' }), 'cbt-direct'); } _direct = app.database(); return _direct; } catch (e) { return null; }
+    }).catch(function () { return null; });
+  }
   var db = function () {
     try {
-      var m = _vidGetDB(); if (!m) return null;
+      var m = _vidGetDB(); if (!m) return _direct || null;
       if (LITE) return LITE;
       if (typeof firebase !== 'undefined' && m.app && m.app.options) {
         var app; try { app = firebase.app('cbt-lite'); } catch (e) { app = firebase.initializeApp(m.app.options, 'cbt-lite'); }
@@ -13917,8 +13931,8 @@ function exportAttendanceCSV(){
         return { user: { role: 'student', id: id, name: loc.name || id, stream: st } };
       }
       say('Connecting to the school cloud…');
-      return waitDb(6000).then(function (d) {
-        if (!d) { var why = !navigator.onLine ? 'This device is offline. Turn on Wi-Fi or mobile data, then try again.' : (typeof firebase === 'undefined' ? 'The school cloud could not load on this network (Google services may be blocked). Try mobile data or another Wi-Fi, then reload the page.' : 'The school cloud did not answer. Reload the page and try again.'); return { err: 'Cannot reach the school cloud right now. ' + why }; }
+      return waitDb(2500).then(function (d) { return d || ensureDb(); }).then(function (d) {
+        if (!d) { var why = !navigator.onLine ? 'This device is offline. Turn on Wi-Fi or mobile data, then try again.' : (typeof firebase === 'undefined' ? 'The school cloud could not load on this network (Google services may be blocked). Try mobile data or another Wi-Fi, then reload the page.' : 'The school cloud did not answer. Reload the page and try again.'); var diag = ' [app:' + (typeof firebase !== 'undefined' ? 'ok' : 'no') + ' database:' + (typeof firebase !== 'undefined' && typeof firebase.database === 'function' ? 'ok' : 'no') + ' online:' + (navigator.onLine ? 'yes' : 'no') + ']'; return { err: 'Cannot reach the school cloud right now. ' + why + diag }; }
         say('Looking for your SDMS code…');
         var pinP = withTimeout(d.ref('cbtPins/' + id).once('value'), 20000, 'The cloud did not answer while checking your password. Please try again.');
         pinP.catch(function () {});                                       /* started in parallel with the lookup */
