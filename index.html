@@ -13918,7 +13918,7 @@ function exportAttendanceCSV(){
       }
       say('Connecting to the school cloud…');
       return waitDb(6000).then(function (d) {
-        if (!d) return { err: 'Cannot reach the school cloud right now. Check your internet connection (or mobile data) and try again.' };
+        if (!d) { var why = !navigator.onLine ? 'This device is offline. Turn on Wi-Fi or mobile data, then try again.' : (typeof firebase === 'undefined' ? 'The school cloud could not load on this network (Google services may be blocked). Try mobile data or another Wi-Fi, then reload the page.' : 'The school cloud did not answer. Reload the page and try again.'); return { err: 'Cannot reach the school cloud right now. ' + why }; }
         say('Looking for your SDMS code…');
         var pinP = withTimeout(d.ref('cbtPins/' + id).once('value'), 20000, 'The cloud did not answer while checking your password. Please try again.');
         pinP.catch(function () {});                                       /* started in parallel with the lookup */
@@ -16214,7 +16214,7 @@ function exportAttendanceCSV(){
   var deferred = null, btn = null, DKEY = 'pwa-dismissed-at';
   function standalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
   function isIos() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
-  function dismissed() { try { var t = +localStorage.getItem(DKEY) || 0; return Date.now() - t < 7 * 24 * 3600 * 1000; } catch (e) { return false; } }
+  function dismissed() { try { return sessionStorage.getItem(DKEY) === '1'; } catch (e) { return false; } }
   function hide() { if (btn) { btn.remove(); btn = null; } }
   function iosHelp() {
     var o = document.createElement('div');
@@ -16225,23 +16225,29 @@ function exportAttendanceCSV(){
     o.addEventListener('click', function (e) { if (e.target === o || e.target.tagName === 'BUTTON') o.remove(); });
     document.body.appendChild(o);
   }
+  function helpAny() {
+    var o = document.createElement('div');
+    o.style.cssText = 'position:fixed;inset:0;z-index:100050;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    o.innerHTML = '<div style="background:#fff;color:#0f172a;border-radius:14px;max-width:380px;width:100%;padding:18px;font-family:inherit;box-shadow:0 20px 60px rgba(0,0,0,.4)"><b style="font-size:1.05rem">Install this app</b><div style="line-height:1.7;margin:10px 0;font-size:.9rem"><b>Android (Chrome):</b> tap the menu <b>⋮</b> → <b>Install app</b> (or <b>Add to Home screen</b>).<br><b>Computer (Chrome / Edge):</b> click the <b>install icon</b> at the right end of the address bar, or menu → <b>Install</b>.<br><b>iPhone / iPad:</b> open in Safari → <b>Share</b> → <b>Add to Home Screen</b>.<br><span style="color:#64748b;font-size:.8rem">The page must be opened from the school’s web address (https://…). A file opened from a computer or a chat app cannot be installed.</span></div><button style="padding:8px 14px;border-radius:8px;border:1px solid #7c3aed;background:#7c3aed;color:#fff;font-weight:700;cursor:pointer">Got it</button></div>';
+    o.addEventListener('click', function (e) { if (e.target === o || e.target.tagName === 'BUTTON') o.remove(); });
+    document.body.appendChild(o);
+  }
   window.installApp = function () {
     if (deferred) { var d = deferred; deferred = null; hide(); d.prompt(); return d.userChoice.catch(function () {}); }
-    if (isIos() && !standalone()) { iosHelp(); }
+    if (standalone()) return; if (isIos()) iosHelp(); else helpAny();
   };
   function show() {
     if (btn || standalone() || dismissed()) return;
-    if (!deferred && !isIos()) return;
-    btn = document.createElement('div');
-    btn.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:100040;display:flex;align-items:center;gap:2px;background:#7c3aed;color:#fff;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.35);font:700 .82rem/1 inherit;font-family:inherit';
+        btn = document.createElement('div');
+    btn.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:100040;display:flex;align-items:center;gap:2px;background:#7c3aed;color:#fff;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.35);font:700 .82rem/1 inherit;font-family:inherit';
     btn.innerHTML = '<button type="button" id="pwa-go" style="background:transparent;border:0;color:#fff;font:inherit;padding:11px 8px 11px 16px;cursor:pointer">\u2B07 Install app</button><button type="button" id="pwa-x" aria-label="Dismiss" style="background:transparent;border:0;color:#fff;font:inherit;padding:11px 14px 11px 6px;cursor:pointer;opacity:.8">\u2715</button>';
     document.body.appendChild(btn);
     document.getElementById('pwa-go').onclick = window.installApp;
-    document.getElementById('pwa-x').onclick = function () { try { localStorage.setItem(DKEY, String(Date.now())); } catch (e) {} hide(); };
+    document.getElementById('pwa-x').onclick = function () { try { sessionStorage.setItem(DKEY, '1'); } catch (e) {} hide(); };
   }
   window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; if (document.body) show(); else window.addEventListener('DOMContentLoaded', show); });
   window.addEventListener('appinstalled', function () { deferred = null; hide(); });
-  window.addEventListener('load', function () { setTimeout(show, 2500); });
+  window.addEventListener('load', function () { setTimeout(show, 800); });
 })();
 </script>
 
