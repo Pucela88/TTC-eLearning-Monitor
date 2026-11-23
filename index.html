@@ -500,8 +500,7 @@ body.student-mode .view,body.student-mode #v-reb,body.student-mode #v-reb.on{dis
 /* the CBT, Gallery, Videos windows live INSIDE #v-smart: keep that box (zero height) and hide only the login/app inside it */
 body.student-mode #v-smart,body.student-mode #v-smart.on{display:block!important;flex:0 0 0!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important}
 body.student-mode #v-smart #root{display:none!important}
-/* students see nothing below their window except the footer: no Learning Hub / other systems */
-body.student-mode .learning-hub{display:none!important}
+/* students now see the Smart Learning & Research Hub below their dashboard, just before the footer */
 #student-home{display:none;flex:1;min-height:calc(100vh - 150px);flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:30px 20px;background:linear-gradient(160deg,#eef2ff,#f8fafc);color:#1e293b;font-family:'Space Grotesk',sans-serif;overflow:auto}
 body.student-mode #student-home{display:flex}
 #student-home .sh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,230px));gap:16px;justify-content:center}
@@ -16936,7 +16935,15 @@ function exportAttendanceCSV(){
 (function () {
   'use strict';
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+    /* keep every device on the newest version: check for an update on each open, and reload once when a new version takes over */
+    var _hadSW = !!navigator.serviceWorker.controller, _swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (!_hadSW || _swReloaded) return; _swReloaded = true; location.reload(); });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        try { reg.update(); } catch (e) {}
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) { try { reg.update(); } catch (e) {} } });
+      }).catch(function () {});
+    });
   }
   var deferred = null, btn = null, DKEY = 'pwa-dismissed-at';
   function standalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
