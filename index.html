@@ -10171,7 +10171,7 @@ function loadDocsFromFirebase() {
       if (isAdminNow()) {
         if (!sel) { sel = document.createElement('select'); sel.id = 'sds-tutor'; sel.className = $('sds-stream').className; sel.style.cssText = $('sds-stream').style.cssText; sel.onchange = function () { sdStaffRender(); }; $('sds-stream').parentNode.insertBefore(sel, $('sds-stream')); }
         var curT = sel.value;
-        sel.innerHTML = '<option value="">All tutors (Administrator view)</option>' + Object.keys(tutors).sort().map(function (k) { return '<option value="' + esc(k) + '">Tutor: ' + esc(tutors[k]) + '</option>'; }).join('');
+        sel.innerHTML = '<option value="">All tutors (Administrator view)</option>' + Object.keys(tutors).sort().map(function (k) { return '<option value="' + esc(k) + '">' + esc(tutors[k]) + '</option>'; }).join('');
         sel.value = curT;
       } else if (sel) { sel.remove(); }
       var streams = {}; allRows.forEach(function (r) { if (r.stream) streams[r.stream] = 1; });
@@ -10354,7 +10354,7 @@ function loadDocsFromFirebase() {
       if (stu) add(m.id, res[0]); else res[0].forEach(function (st) { add(st.key, st); });
       var streams = {}; rows.forEach(function (r) { if (r.stream) streams[r.stream] = 1; });
       var fs = $('svl-fstream'), cur = fs.value; fs.innerHTML = '<option value="">All classes</option>' + Object.keys(streams).sort().map(function (s) { return '<option>' + esc(s) + '</option>'; }).join(''); fs.value = cur;
-      var ft = $('svl-ftutor'); if (isAdmin()) { var t = {}; Object.keys(assign).forEach(function (k) { var a = assign[k]; if (a && a.name) t[nrm(a.name)] = a.name; }); var ct = ft.value; ft.innerHTML = '<option value="">All tutors (Administrator view)</option>' + Object.keys(t).sort().map(function (k) { return '<option value="' + esc(k) + '">Tutor: ' + esc(t[k]) + '</option>'; }).join(''); ft.value = ct; ft.style.display = ''; } else ft.style.display = 'none';
+      var ft = $('svl-ftutor'); if (isAdmin()) { var t = {}; Object.keys(assign).forEach(function (k) { var a = assign[k]; if (a && a.name) t[nrm(a.name)] = a.name; }); var ct = ft.value; ft.innerHTML = '<option value="">All tutors (Administrator view)</option>' + Object.keys(t).sort().map(function (k) { return '<option value="' + esc(k) + '">' + esc(t[k]) + '</option>'; }).join(''); ft.value = ct; ft.style.display = ''; } else ft.style.display = 'none';
       svlRender();
     }).catch(function (e) { box.innerHTML = '<div style="padding:14px;color:#b91c1c;font-size:.85rem">' + esc(friendly(e)) + '</div>'; });
   }
@@ -15052,8 +15052,19 @@ function exportAttendanceCSV(){
   var ERR = function (m, info) { var e = $('cb-err'); if (e) { e.textContent = m; e.style.display = m ? 'block' : 'none'; e.style.background = info ? '#e0f2fe' : '#fee2e2'; e.style.color = info ? '#075985' : '#b91c1c'; } else if (m) alert(m); };
 
   /* ── open / close / data ── */
+  /* A person already signed in to the main app as Administrator or Tutor goes straight into the CBT centre: no second sign-in, no role selection. */
+  function cbtAutoSignIn() {
+    var ss = null; try { ss = JSON.parse(sessionStorage.getItem('sc-session') || 'null'); } catch (e) {}
+    if (C.u && C.u.auto && (!ss || ss.username !== C.u.username)) { C.u = null; C.view = 'home'; C.lock = false; }
+    if (C.u || !ss || (ss.role !== 'Admin' && ss.role !== 'Tutor') || !ss.username) return;
+    if (C.noAutoFor && C.noAutoFor === ss.username) return;
+    var admin = ss.role === 'Admin';
+    C.u = { role: admin ? 'admin' : 'tutor', admin: admin, username: ss.username, login: ss.username, name: ss.name || ss.username, auto: true };
+    C.sub = 'exams'; C.view = 'dash';
+  }
   window.openCBT = function () {
     $('cbt').style.display = 'flex'; document.body.style.overflow = 'hidden';
+    cbtAutoSignIn();
     var d = db();
     if (d && !C.bound) {
       C.bound = true;
@@ -15076,7 +15087,7 @@ function exportAttendanceCSV(){
   CBT.dl = cbtDl;
   CBT.tab = function (t) { C.tab = t; render(); };
   CBT.sub = function (s) { if (s === 'create' && C.sub !== 'create') { C.editId = null; C.q = []; C.att = []; C.attData = {}; C.attRemoved = []; META = {}; } C.sub = s; C.view = 'dash'; C.lock = false; render(); };
-  CBT.out = function () { var stu = C.u && C.u.role === 'student' && !C.u.guest; C.u = null; C.view = 'home'; C.lock = false; if (stu && window.exitStudentMode) window.exitStudentMode(); render(); };
+  CBT.out = function () { var stu = C.u && C.u.role === 'student' && !C.u.guest; if (C.u && C.u.auto) C.noAutoFor = C.u.username; C.u = null; C.view = 'home'; C.lock = false; if (stu && window.exitStudentMode) window.exitStudentMode(); render(); };
   CBT.pf = function (k, v) { C.pf[k] = v; render(); };
 
   /* ── LOGIN ── */
@@ -15584,6 +15595,75 @@ function exportAttendanceCSV(){
     s.essayMarks = em; s.aiFb = fb; s.essayDone = true; s.tutorReviewed = true; CBT.mclose();
     finalize(s.examId, s).then(function () { return db().ref('cbtSubs/' + key).update({ essayMarks: em, aiFb: fb, essayDone: true, essayPending: false, tutorReviewed: true }); }).then(function () { CBT.results(C.resId); });
   };
+  /* ── QUICK ASSIGN (admin): pick a tutor, then tick the subjects he/she teaches in each class ── */
+  function mxOwn(a, t) { return !!a && !!t && ((!!a.user && a.user === t.user) || nm(a.name) === nm(t.name)); }
+  function mxCols() { return [''].concat(STREAMS); }
+  /* every tutor: built-in + CBT tutors + tutors registered/approved in Tutor Accounts */
+  function mxTutors() {
+    var out = [], seen = {};
+    tutorList().forEach(function (x) { seen[nm(x.name)] = 1; out.push({ user: x.user, name: x.name, id: x.user || ('n:' + nm(x.name)) }); });
+    mxLoadReg();
+    (C.regTut || []).concat(window.__SC_REG_TUTORS || []).forEach(function (r) { if (r && r.name && !seen[nm(r.name)]) { seen[nm(r.name)] = 1; out.push({ user: '', name: r.name, id: 'n:' + nm(r.name) }); } });
+    return out.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+  }
+  /* registered tutors (Tutor Accounts) are read here directly, so the list is complete even when the Smart Classroom admin screen was never opened */
+  function mxLoadReg() {
+    var d = db(); if (C.regOn || !d) return; C.regOn = true;
+    d.ref('tutorAccounts').on('value', function (sn) {
+      var v = sn.val() || {};
+      C.regTut = Object.keys(v).filter(function (k) { var a = v[k]; return a && a.name && (a.role || 'Tutor') === 'Tutor'; }).map(function (k) { return { name: String(v[k].name).replace(/\s+/g, ' ').trim() }; });
+      if (C.u && C.sub === 'admin') render();
+    }, function () { C.regOn = false; });
+  }
+  function mxTutor() { return C.mx ? mxTutors().filter(function (x) { return x.id === C.mx.u; })[0] : null; }
+  function mxCard() {
+    var tl = mxTutors(), t = mxTutor();
+    var head = '<div style="font-weight:700;margin-bottom:6px">Quick assign: tick the subjects of a tutor</div><div style="font-size:.78rem;color:#64748b;margin-bottom:10px">1) Choose a tutor. 2) Tick every subject he or she teaches, in each class. 3) Press <b>Save</b>. Yellow boxes already belong to another tutor (name shown under the box): ticking one will replace that tutor. The <b>All classes</b> column is the fallback for classes that have no tick of their own. Nothing is saved until you press Save.</div>';
+    var sel = '<select id="mx-t" onchange="CBT.mxPick(this.value)" style="' + IN + ';max-width:380px"><option value="">— Select a tutor —</option>' + tl.map(function (x) { return '<option value="' + E(x.id) + '"' + (t && t.id === x.id ? ' selected' : '') + '>' + E(x.name) + '</option>'; }).join('') + '</select>';
+    if (!t) return CARD(head + sel);
+    var cols = mxCols(), subs = subjects();
+    var th = '<th style="padding:8px;position:sticky;left:0;background:#f1f5f9;min-width:170px">Subject</th>' + cols.map(function (st, ci) { return '<th style="padding:6px 8px;white-space:nowrap;font-size:.7rem;text-align:center">' + (st ? E(st) : 'All classes') + '<br><a href="javascript:void(0)" onclick="CBT.mxBulk(\'c\',' + ci + ')" style="font-weight:600;color:#4f46e5">all</a></th>'; }).join('');
+    var rows = subs.map(function (sj, si) {
+      return '<tr style="border-top:1px solid #e2e8f0"><td style="padding:6px 8px;position:sticky;left:0;background:#fff;font-weight:600;white-space:nowrap">' + E(subjFull(sj)) + ' <a href="javascript:void(0)" onclick="CBT.mxBulk(\'s\',' + si + ')" style="font-weight:600;font-size:.7rem;color:#4f46e5">all</a></td>' + cols.map(function (st, ci) {
+        var k = akey(sj, st), o = C.assign[k], other = !!o && !mxOwn(o, t), on = !!C.mx.sel[k];
+        return '<td style="padding:4px 6px;text-align:center;' + (other ? 'background:#fef9c3' : '') + '"><input type="checkbox" data-k="' + E(k) + '" data-o="' + (other ? 1 : 0) + '" data-s="' + si + '" data-c="' + ci + '"' + (on ? ' checked' : '') + ' onchange="CBT.mxTog(this)">' + (other ? '<div style="font-size:.58rem;color:#a16207;white-space:nowrap">' + E(String(o.name || '').split(' ')[0].slice(0, 9)) + '</div>' : '') + '</td>';
+      }).join('') + '</tr>';
+    });
+    return CARD(head + sel + '<div style="margin:12px 0 8px;font-size:.84rem">Subjects ticked for <b>' + E(t.name) + '</b>: <b id="mx-count">0</b></div><div id="mx-grid" style="overflow:auto;max-height:70vh;border:1px solid #e2e8f0;border-radius:12px"><table style="border-collapse:collapse;font-size:.8rem;width:100%"><thead style="position:sticky;top:0;z-index:2"><tr style="background:#f1f5f9">' + th + '</tr></thead><tbody>' + (subs.length ? rows.join('') : '<tr><td style="padding:10px">No subjects yet.</td></tr>') + '</tbody></table></div><div style="margin-top:12px">' + B('Save', 'CBT.mxSave()', '#16a34a') + B('Undo changes', 'CBT.mxUndo()', '#64748b') + B('Untick all', "CBT.mxBulk('x',0)", '#dc2626') + '</div>') ;
+  }
+  CBT.mxPick = function (u) {
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    if (!u) { C.mx = null; return render(); }
+    var t = mxTutors().filter(function (x) { return x.id === u; })[0], sel = {};
+    if (t) Object.keys(C.assign).forEach(function (k) { if (mxOwn(C.assign[k], t)) sel[k] = true; });
+    C.mx = { u: u, sel: sel }; render();
+    var e = $('mx-t'); if (e) e.value = u;
+  };
+  CBT.mxUndo = function () { if (C.mx) CBT.mxPick(C.mx.u); };
+  CBT.mxCount = function () { var e = $('mx-count'); if (!e || !C.mx) return; e.textContent = Object.keys(C.mx.sel).filter(function (k) { return C.mx.sel[k]; }).length; };
+  CBT.mxTog = function (el) { if (!C.mx) return; if (el.checked) C.mx.sel[el.getAttribute('data-k')] = true; else delete C.mx.sel[el.getAttribute('data-k')]; CBT.mxCount(); };
+  /* bulk tick: 's' = a whole subject row, 'c' = a whole class column, 'x' = untick everything. Never takes boxes that belong to another tutor. */
+  CBT.mxBulk = function (mode, i) {
+    if (!C.mx) return;
+    var all = [].slice.call(document.querySelectorAll('#mx-grid input[type=checkbox]'));
+    var tg = mode === 'x' ? all : all.filter(function (x) { return x.getAttribute('data-o') !== '1' && x.getAttribute(mode === 's' ? 'data-s' : 'data-c') === String(i); });
+    var val = mode === 'x' ? false : !tg.every(function (x) { return x.checked; });
+    tg.forEach(function (x) { x.checked = val; if (val) C.mx.sel[x.getAttribute('data-k')] = true; else delete C.mx.sel[x.getAttribute('data-k')]; });
+    CBT.mxCount();
+  };
+  CBT.mxSave = function () {
+    var d = db(), t = mxTutor(); if (!d) return alert('Cloud database is not connected.');
+    if (!t) return alert('Select a tutor first.');
+    var up = {}, add = 0, rem = 0, rep = [], cols = mxCols();
+    subjects().forEach(function (sj) { cols.forEach(function (st) {
+      var k = akey(sj, st), o = C.assign[k], mine = !!C.mx.sel[k], own = mxOwn(o, t);
+      if (mine && !own) { if (o) rep.push(subjFull(sj) + ' (' + (st || 'All classes') + '): ' + o.name); up['cbtAssign/' + k] = { user: t.user, name: t.name, subject: sj, stream: st }; add++; }
+      else if (!mine && own) { up['cbtAssign/' + k] = null; rem++; }
+    }); });
+    if (!add && !rem) return alert('No changes to save.');
+    if (rep.length && !confirm('These ' + rep.length + ' assignment(s) belong to another tutor and will be REPLACED by ' + t.name + ':\n\n' + rep.slice(0, 15).join('\n') + (rep.length > 15 ? '\n… and ' + (rep.length - 15) + ' more' : '') + '\n\nContinue?')) return;
+    d.ref().update(up).then(function () { alert('Saved for ' + t.name + ': ' + add + ' added, ' + rem + ' removed.'); }).catch(function (e) { alert('Could not save: ' + (e.message || e)); });
+  };
   function adminTools() {
     if (!C.u.admin || C.u.role !== 'admin') return '<div>Admin access only.</div>';
     var tl = tutorList();
@@ -15592,7 +15672,7 @@ function exportAttendanceCSV(){
       return [E(subjFull(a.subject)), a.stream ? E(a.stream) : '<i style="color:#64748b">All classes (default)</i>', '<input list="ad-tl" value="' + E(a.name) + '" onchange="CBT.rename(\'' + E(a.k) + '\',this.value)" style="' + IN + ';max-width:300px">', (tl.some(function (t) { return nm(t.name) === nm(a.name); }) ? PILL('has an account', '#16a34a') : PILL('no account with this exact name', '#d97706')), B('Delete', "CBT.assignDel('" + E(a.k) + "')", '#dc2626', 1)];
     });
     var tutorRows = tl.map(function (t) { return [E(t.name), E(t.login || t.user), t.builtin ? 'Smart Classroom account (shared)' : 'CBT tutor', t.builtin ? '' : B('Delete', "CBT.delTutor('" + E(t.user) + "')", '#dc2626', 1)]; });
-    return CARD('<div style="font-weight:700;margin-bottom:6px">Subject assignments</div><div style="font-size:.78rem;color:#64748b;margin-bottom:10px">One subject can have different tutors in different classes: add one line per subject and class. Each class of a subject has exactly one tutor, so exams never clash. “All classes” is a fallback that applies to any class without its own line. If the typed name matches a tutor account (same spelling), that tutor can sign in and manage those exams.</div>' + '<div style="font-weight:700;margin:4px 0 8px">Assign a tutor to a subject in a class</div>' + G(L('Subject', '<input id="as-s" list="as-s-list" autocomplete="off" placeholder="Select or type a subject" style="' + IN + '"><datalist id="as-s-list">' + subjects().map(function (o) { return '<option value="' + E(o) + '">'; }).join('') + '</datalist>') + L('Class / Stream', S('as-c', STREAMS, '', 'All classes (default)')) + L('Tutor’s full name', I('as-t', 'Type the tutor’s full name'))) + '<div style="margin:12px 0 18px">' + B('Assign', 'CBT.assignAdd()') + '</div>' + TBL(['Subject', 'Class / Stream', 'Tutor (edit the name to change)', 'Account', ''], assignRows) + '<datalist id="ad-tl">' + tl.map(function (t) { return '<option value="' + E(t.name) + '">'; }).join('') + '</datalist>') +
+    return mxCard() + CARD('<div style="font-weight:700;margin-bottom:6px">Subject assignments</div><div style="font-size:.78rem;color:#64748b;margin-bottom:10px">One subject can have different tutors in different classes: add one line per subject and class. Each class of a subject has exactly one tutor, so exams never clash. “All classes” is a fallback that applies to any class without its own line. If the typed name matches a tutor account (same spelling), that tutor can sign in and manage those exams.</div>' + '<div style="font-weight:700;margin:4px 0 8px">Assign a tutor to a subject in a class</div>' + G(L('Subject', '<input id="as-s" list="as-s-list" autocomplete="off" placeholder="Select or type a subject" style="' + IN + '"><datalist id="as-s-list">' + subjects().map(function (o) { return '<option value="' + E(o) + '">'; }).join('') + '</datalist>') + L('Class / Stream', S('as-c', STREAMS, '', 'All classes (default)')) + L('Tutor’s full name', I('as-t', 'Type the tutor’s full name'))) + '<div style="margin:12px 0 18px">' + B('Assign', 'CBT.assignAdd()') + '</div>' + TBL(['Subject', 'Class / Stream', 'Tutor (edit the name to change)', 'Account', ''], assignRows) + '<datalist id="ad-tl">' + tl.map(function (t) { return '<option value="' + E(t.name) + '">'; }).join('') + '</datalist>') +
       CARD('<div style="font-weight:700;margin-bottom:6px">Tutors</div>' + TBL(['Name', 'Username', 'Type', ''], tutorRows) + '<div style="font-weight:700;margin:16px 0 4px">Add a tutor</div><div style="font-size:.76rem;color:#64748b;margin-bottom:8px">Tutors may all use the same username (for example <b>tutor</b>); the <b>password</b> tells the system who is signing in, so every tutor needs a different password. The full name must be spelled exactly as in <b>Subject assignments</b> so their exams appear in their account.</div>' + G(L('Full name', I('ad-tn', 'e.g. Marie Uwase')) + L('Username (can be shared)', I('ad-tu', 'e.g. tutor')) + L('Own password (min 6, must differ from other tutors)', I('ad-tp', 'Password', 'password'))) + '<div style="margin-top:12px">' + B('Add tutor', 'CBT.addTutor()') + '</div>') +
       subjectsCard() + cleanCard() + CARD('<div style="font-weight:700;margin-bottom:6px">Reset a student password</div><div style="font-size:.78rem;color:#64748b;margin-bottom:10px">The student chooses a new password the next time they sign in.</div>' + G(L('SDMS code', I('ad-id', 'SDMS code'))) + '<div style="margin-top:12px">' + B('Reset password', 'CBT.reset()', '#dc2626') + '</div>');
   }
@@ -15974,6 +16054,7 @@ function exportAttendanceCSV(){
     if (T && C.sub === 'create') C.lock = true; else if (C.view !== 'exam') C.lock = false;
     b.innerHTML = tabs + (T ? (C.sub === 'results' ? resultsView() : tutorView()) : studentView());
     if (T && C.sub === 'create') { restoreMeta(); CBT.subChg(); }
+    if (T && C.sub === 'admin' && CBT.mxCount) CBT.mxCount();
   }
   function home() {
     var t = C.tab, f;
